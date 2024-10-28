@@ -19,6 +19,3 @@ The project utilizes the following technologies:
 - **Frontend**: Vue.js
 - **Database**: PostgreSQL
 - **Infrastructure**: Docker, Kubernetes, GitHub Actions, Kafka, Redis
-```
-
-Теперь это описание отражает использование **Redis** для хранения **access tokens**, что улучшит производительность и масштабируемость системы. Если нужны дополнительные изменения, дай знать!
