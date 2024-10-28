@@ -1,2 +1,11 @@
+spring:
+  profiles:
+    active: dev
+
 openai:
   api-key: ${OPENAI_API_KEY}
+  api-url: https://api.openai.com/v1/completions
+
+api:
+  endpoint:
+    base-url: /api/v1

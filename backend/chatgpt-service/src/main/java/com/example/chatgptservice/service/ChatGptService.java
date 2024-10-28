@@ -1,5 +1,7 @@
 package com.example.chatgptservice.service;
 
+import com.example.chatgptservice.execption.ChatGptPromptException;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -15,18 +17,22 @@ import java.util.Map;
 public class ChatGptService {
 
     private final RestTemplate restTemplate;
-    private final String apiKey = "YOUR_API_KEY"; // Можешь заменить это на значение из конфигурации
 
     @Value("${openai.api-key}")
     private String openAiApiKey;
 
-    private final String API_URL = "https://api.openai.com/v1/completions";
+    @Value("${openai.api-url}")
+    private String openAiApiUrl;
 
     public ChatGptService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
-    public String getChatGptResponse(String prompt) {
+    public String getChatGptResponse(@NotNull String  prompt) {
+        if (prompt.isEmpty()) {
+            throw new ChatGptPromptException("Prompt cannot be null or empty");
+        }
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("Authorization", "Bearer " + openAiApiKey);
@@ -38,9 +44,10 @@ public class ChatGptService {
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
 
-        ResponseEntity<String> response = restTemplate.postForEntity(API_URL, request, String.class);
-
+        ResponseEntity<String> response = restTemplate.postForEntity(openAiApiUrl, request, String.class);
         return response.getBody();
+
     }
 }
+
 
