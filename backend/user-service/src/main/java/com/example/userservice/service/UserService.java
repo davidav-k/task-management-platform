@@ -21,23 +21,25 @@ public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private User user;
 
 
     public User createUser(@NotNull User user) {
+        this.user = user;
 
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
-            throw new UserNotFoundException("Username is already taken");
+            throw new IllegalArgumentException("Username is already taken");
         }
 
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-            throw new UserNotFoundException("Email is already in use");
+            throw new IllegalArgumentException("Email is already in use");
         }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         if (user.getRoles() == null || user.getRoles().isEmpty()) {
             Role defaultRole = roleRepository.findByName(RoleType.ROLE_USER)
-                    .orElseThrow(() -> new EntityNotFoundException("Default role not found"));
+                    .orElseThrow(() -> new IllegalArgumentException("Default role not found"));
             user.getRoles().add(defaultRole);
         }
 
