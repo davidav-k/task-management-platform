@@ -1,0 +1,25 @@
+spring:
+  config:
+    activate:
+      on-profile: dev-local
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/userdb
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+# Redis для хранения access токенов
+redis:
+  host: localhost
+  port: 6379
+  password: ""
+
+jwt:
+  secret: dev-local-secret-key
+  expiration-time: 3600000
+
