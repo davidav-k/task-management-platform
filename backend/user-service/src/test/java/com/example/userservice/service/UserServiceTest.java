@@ -14,14 +14,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 @SpringBootTest
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -140,9 +140,20 @@ class UserServiceTest {
 
     @Test
     void updateUserSuccess() {
-        User user = User.builder().id(1L).build();
+        User user = User.builder()
+                .id(1L)
+                .username("admin")
+                .email("admin@mail.com")
+                .password("password")
+                .roles(Set.of(Role.builder().name(RoleType.ROLE_ADMIN).build()))
+                .enabled(true)
+                .build();
+        User updatedUser = User.builder().id(2L).username("user").build();
         given(userRepository.findById(1L)).willReturn(Optional.of(user));
+        given(userRepository.save(user)).willReturn(updatedUser);
+        User userFromDB = userService.updateUser(1L, updatedUser);
 
+        assertEquals(updatedUser, userFromDB);
     }
 @Test
 void updateUserFail() {
@@ -159,14 +170,44 @@ void updateUserFail() {
 
         userService.deleteUser(1L);
 
-        assertNull(userService.findById(1L));
+        verify(userRepository, times(1)).delete(user);
     }
     @Test
     void deleteUserFail() {
 
+        User user = User.builder().id(1L).build();
+        given(userRepository.findById(1L)).willReturn(Optional.empty());
+        assertThrows(UserNotFoundException.class, () -> {userService.deleteUser(1L);});
     }
 
     @Test
-    void assignRoleToUser() {
+    void assignRoleToUserSuccess() {
+        Role roleAdmin = Role.builder().name(RoleType.ROLE_ADMIN).build();
+        Role roleUser = Role.builder().name(RoleType.ROLE_USER).build();
+        Set<Role> roles = new HashSet<>();
+        roles.add(roleUser);
+        User user = User.builder()
+                .id(1L)
+                .username("admin")
+                .email("admin@mail.com")
+                .password("password")
+                .roles(roles)
+                .enabled(true)
+                .build();
+        given(userRepository.findByUsername(user.getUsername())).willReturn(Optional.of(user));
+        given(roleRepository.findByName(RoleType.ROLE_ADMIN)).willReturn(Optional.of(roleAdmin));
+        given(userRepository.save(user)).willReturn(user);
+
+        userService.assignRoleToUser("admin", RoleType.ROLE_ADMIN);
+
+        assertEquals(Set.of(roleUser, roleAdmin), user.getRoles());
+        verify(userRepository, times(1)).findByUsername(user.getUsername());
+        verify(roleRepository, times(1)).findByName(RoleType.ROLE_ADMIN);
+    }
+    @Test
+    void assignRoleToUserFail() {
+
+
+
     }
 }
