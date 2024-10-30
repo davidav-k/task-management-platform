@@ -1,0 +1,34 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: jdbc:postgresql://prod-db-server:5432/userdb
+    driver-class-name: org.postgresql.Driver
+    username: prod_user
+    password: prod_secure_password
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+
+# Redis для хранения access токенов
+redis:
+  host: prod-redis-server
+  port: 6379
+  password: prod_redis_password
+
+jwt:
+  secret: prod-super-secret-key
+  expiration-time: 3600000 # 1 hour
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://prod-eureka-server:8761/eureka/
+
+logging:
+  level:
+    org.springframework: WARN
+
