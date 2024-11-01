@@ -1,5 +1,9 @@
 package com.example.userservice.service;
 
+import com.example.userservice.dto.UserRq;
+import com.example.userservice.dto.UserRqToUserConverter;
+import com.example.userservice.dto.UserRs;
+import com.example.userservice.dto.UserToUserRsConverter;
 import com.example.userservice.entity.Role;
 import com.example.userservice.entity.RoleType;
 import com.example.userservice.entity.User;
@@ -18,39 +22,40 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserService {
 
+    private final UserRqToUserConverter userRqToUserConverter;
+    private final UserToUserRsConverter userToUserRsConverter;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
-    private User user;
 
+    public UserRs createUser(UserRq rq) {
 
-    public User createUser(@NotNull User user) {
-        this.user = user;
-
-        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
+        User newUser = userRqToUserConverter.convert(rq);
+        assert newUser != null;
+        if (userRepository.findByUsername(newUser.getUsername()).isPresent()) {
             throw new IllegalArgumentException("Username is already taken");
         }
 
-        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+        if (userRepository.findByEmail(newUser.getEmail()).isPresent()) {
             throw new IllegalArgumentException("Email is already in use");
         }
 
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-        if (user.getRoles() == null || user.getRoles().isEmpty()) {
+        if (newUser.getRoles() == null || newUser.getRoles().isEmpty()) {
             Role defaultRole = roleRepository.findByName(RoleType.ROLE_USER)
                     .orElseThrow(() -> new IllegalArgumentException("Default role not found"));
-            user.getRoles().add(defaultRole);
+            newUser.getRoles().add(defaultRole);
         }
 
-        user.setEnabled(true);
+        User savedUser = userRepository.save(newUser);
 
-        return userRepository.save(user);
+        return userToUserRsConverter.convert(savedUser);
     }
 
-    public User findById(Long id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+    public UserRs findById(Long id) {
+
+        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        return userToUserRsConverter.convert(user);
     }
 
     public User findByUsername(String username) {
@@ -63,15 +68,21 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
     }
 
-    public List<User> findAll() {
-        return userRepository.findAll();
+    public List<UserRs> findAll() {
+
+        List<User> users = userRepository.findAll();
+
+        return users.stream().map(userToUserRsConverter::convert).toList();
     }
 
-    public User updateUser(Long userId, User updatedUser) {
+    public UserRs update(Long userId, UserRq rq) {
+
+        User updatedUser = userRqToUserConverter.convert(rq);
 
         User existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
+        assert updatedUser != null;
         validateUsernameAndEmailForUpdate(existingUser, updatedUser);
         updatePasswordIfProvided(existingUser, updatedUser);
         updateRolesIfProvided(existingUser, updatedUser);
@@ -80,16 +91,17 @@ public class UserService {
         existingUser.setEmail(updatedUser.getEmail());
         existingUser.setEnabled(updatedUser.isEnabled());
 
-        return userRepository.save(existingUser);
+        User savedUser = userRepository.save(existingUser);
+        return userToUserRsConverter.convert(savedUser);
     }
 
-    private void updateRolesIfProvided(User existingUser, User updatedUser) {
+    private void updateRolesIfProvided(User existingUser, @NotNull User updatedUser) {
         if (updatedUser.getRoles() != null && !updatedUser.getRoles().isEmpty()) {
             existingUser.setRoles(updatedUser.getRoles());
         }
     }
 
-    private void updatePasswordIfProvided(User existingUser, User updatedUser) {
+    private void updatePasswordIfProvided(User existingUser, @NotNull User updatedUser) {
         if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
             existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
         }
@@ -109,18 +121,19 @@ public class UserService {
 
     }
 
-    public void deleteUser(Long userId){
+    public void deleteById(Long userId){
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new UserNotFoundException("User not found"));
 
             userRepository.delete(user);
     }
 
-    public void assignRoleToUser(String username, RoleType roleType) {
+    public void assignRoleToUser(String username, String roleName) {
+
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        Role role = roleRepository.findByName(roleType)
+        Role role = roleRepository.findByName(RoleType.valueOf(roleName))
                 .orElseThrow(() -> new EntityNotFoundException("Role not found"));
 
         if (!user.getRoles().contains(role)) {

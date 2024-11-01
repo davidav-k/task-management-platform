@@ -34,7 +34,8 @@ logging:
   level:
     org.springframework: INFO
 
-
-
+api:
+  endpoint:
+    base-url: /api/v1
 
 

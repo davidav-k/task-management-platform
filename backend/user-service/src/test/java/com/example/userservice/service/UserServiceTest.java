@@ -1,11 +1,17 @@
 package com.example.userservice.service;
 
+
+import com.example.userservice.dto.UserRq;
+import com.example.userservice.dto.UserRqToUserConverter;
+import com.example.userservice.dto.UserRs;
+import com.example.userservice.dto.UserToUserRsConverter;
 import com.example.userservice.entity.Role;
 import com.example.userservice.entity.RoleType;
 import com.example.userservice.entity.User;
 import com.example.userservice.exception.UserNotFoundException;
 import com.example.userservice.repo.RoleRepository;
 import com.example.userservice.repo.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -17,10 +23,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @ExtendWith(MockitoExtension.class)
@@ -32,59 +37,96 @@ class UserServiceTest {
     @MockBean
     RoleRepository roleRepository;
     @MockBean
-    PasswordEncoder passwordEncoder;
+    private UserToUserRsConverter userToUserRsConverter;
+    @MockBean
+    private UserRqToUserConverter userRqToUserConverter;
+    @MockBean
+    private PasswordEncoder passwordEncoder;
 
 
     @Test
     void createUserSuccess() {
-
-        User user = User.builder()
+        Role roleAdmin = Role.builder().name(RoleType.ROLE_ADMIN).build();
+        User user = User.builder().id(1L).username("admin").email("admin@mail.com").password("password")
+                .roles(Set.of(roleAdmin)).enabled(true).build();
+        UserRs rs = UserRs.builder()
                 .id(1L)
                 .username("admin")
                 .email("admin@mail.com")
-                .password("password")
-                .roles(Set.of(Role.builder().name(RoleType.ROLE_ADMIN).build()))
-                .enabled(true)
+                .roles(List.of())
+                .isEnabled(true)
                 .build();
+        UserRq rq = UserRq.builder()
+                .username("admin")
+                .email("admin@mail.com")
+                .password("password")
+                .roles(List.of("ROLE_ADMIN"))
+                .build();
+
+        given(userRqToUserConverter.convert(any(UserRq.class))).willReturn(user);
         given(userRepository.findByUsername(any(String.class))).willReturn(Optional.empty());
         given(userRepository.findByEmail(any(String.class))).willReturn(Optional.empty());
-        given(passwordEncoder.encode(any(String.class))).willReturn("password");
-        given(userRepository.save(user)).willReturn(user);
+        given(userRepository.save(any(User.class))).willReturn(user);
+        given(userToUserRsConverter.convert(any(User.class))).willReturn(rs);
 
-        User UserFromDB = userService.createUser(user);
+        UserRs response = userService.createUser(rq);
 
-        assertNotNull(UserFromDB);
-        assertEquals("admin", UserFromDB.getUsername());
-        assertEquals("admin@mail.com", UserFromDB.getEmail());
-        assertEquals("password", UserFromDB.getPassword());
-        assertTrue(UserFromDB.isEnabled());
-
+        assertNotNull(response);
+        assertEquals("admin", response.getUsername());
+        assertEquals("admin@mail.com", response.getEmail());
+        assertTrue(response.isEnabled());
     }
 
     @Test
     void createUserEmptyUsernameFail() {
-        User user = User.builder().username("").build();
-        assertThrows(IllegalArgumentException.class, () -> userService.createUser(user));
+        Role roleAdmin = Role.builder().name(RoleType.ROLE_ADMIN).build();
+        User user = User.builder().id(1L).username("admin").email("admin@mail.com").password("password")
+                .roles(Set.of(roleAdmin)).enabled(true).build();
+        UserRq rq = UserRq.builder().username("admin").email("admin@mail.com").password("password")
+                .roles(List.of("ROLE_ADMIN")).build();
+        given(userRqToUserConverter.convert(any(UserRq.class))).willReturn(user);
+        given(userRepository.findByUsername(any(String.class))).willReturn(Optional.of(user));
+
+        assertThrows(IllegalArgumentException.class, () -> userService.createUser(rq));
     }
 
     @Test
     void createUserEmptyEmailFail() {
-        User user = User.builder().username("admin").email("").build();
-        assertThrows(IllegalArgumentException.class, () -> userService.createUser(user));
+        Role roleAdmin = Role.builder().name(RoleType.ROLE_ADMIN).build();
+        User user = User.builder().id(1L).username("admin").email("admin@mail.com").password("password")
+                .roles(Set.of(roleAdmin)).enabled(true).build();
+        UserRq rq = UserRq.builder().username("admin").email("admin@admin.com").password("password")
+                .roles(List.of("ROLE_ADMIN")).build();
+        given(userRqToUserConverter.convert(any(UserRq.class))).willReturn(user);
+        given(userRepository.findByUsername(any(String.class))).willReturn(Optional.empty());
+        given(userRepository.findByEmail(any(String.class))).willReturn(Optional.of(user));
+
+        assertThrows(IllegalArgumentException.class, () -> userService.createUser(rq));
     }
 
 
     @Test
     void findByIdSuccess() {
         User user = User.builder().id(1L).build();
-        given(userRepository.findById(1L)).willReturn(Optional.of(user));
-        User UserFromDB = userService.findById(1L);
-        assertNotNull(UserFromDB);
+        UserRs rs = UserRs.builder()
+                .id(1L)
+                .username("admin")
+                .email("admin@mail.com")
+                .roles(List.of("ROLE_ADMIN"))
+                .isEnabled(true)
+                .build();
+        given(userRepository.findById(any(Long.class))).willReturn(Optional.of(user));
+        given(userToUserRsConverter.convert(any(User.class))).willReturn(rs);
+
+        UserRs foundUser = userService.findById(1L);
+
+        assertNotNull(foundUser);
+        assertEquals("admin", foundUser.getUsername());
+        assertEquals("admin@mail.com", foundUser.getEmail());
     }
 
     @Test
     void findByIdFail() {
-        User user = User.builder().id(1L).build();
         given(userRepository.findById(1L)).willReturn(Optional.empty());
         assertThrows(UserNotFoundException.class, () -> userService.findById(1L));
     }
@@ -129,55 +171,66 @@ class UserServiceTest {
         User user2 = User.builder().id(2L).build();
         User user3 = User.builder().id(3L).build();
         List<User> users = new ArrayList<>(List.of(user1, user2, user3));
+        UserRs userRs1 = UserRs.builder().id(1L).build();
         given(userRepository.findAll()).willReturn(users);
+        given(userToUserRsConverter.convert(any(User.class))).willReturn(userRs1);
 
-        List<User> UserFromDB = userService.findAll();
+        List<UserRs> rs = userService.findAll();
 
-        assertNotNull(UserFromDB);
-        assertEquals(3, UserFromDB.size());
-
+        assertNotNull(rs);
+        assertEquals(3, rs.size());
     }
 
     @Test
     void updateUserSuccess() {
-        User user = User.builder()
-                .id(1L)
-                .username("admin")
-                .email("admin@mail.com")
-                .password("password")
-                .roles(Set.of(Role.builder().name(RoleType.ROLE_ADMIN).build()))
-                .enabled(true)
-                .build();
-        User updatedUser = User.builder().id(2L).username("user").build();
-        given(userRepository.findById(1L)).willReturn(Optional.of(user));
-        given(userRepository.save(user)).willReturn(updatedUser);
-        User userFromDB = userService.updateUser(1L, updatedUser);
+        Role roleAdmin = Role.builder().name(RoleType.ROLE_ADMIN).build();
+        User user = User.builder().id(1L).username("admin").email("admin@mail.com").password("password")
+                .roles(Set.of(roleAdmin)).enabled(true).build();
+        UserRq rq = UserRq.builder().username("adminUp").email("admin@mail.com").password("password")
+                .roles(List.of("ROLE_ADMIN")).build();
+        UserRs rs = UserRs.builder().id(1L).username("adminUp").email("admin@mail.com")
+                .roles(List.of("ROLE_ADMIN")).isEnabled(true).build();
+        given(userRqToUserConverter.convert(any(UserRq.class))).willReturn(user);
+        given(userRepository.findById(anyLong())).willReturn(Optional.of(user));
+        given(userRepository.findByUsername(anyString())).willReturn(Optional.of(user));
+        given(passwordEncoder.encode(anyString())).willReturn("password");
+        given(userRepository.save(any(User.class))).willReturn(user);
+        given(userToUserRsConverter.convert(any(User.class))).willReturn(rs);
 
-        assertEquals(updatedUser, userFromDB);
+        UserRs savedUser = userService.update(1L, rq);
+
+        assertEquals(rq.getUsername(), savedUser.getUsername());
+        assertEquals(rq.getEmail(),savedUser.getEmail());
     }
-@Test
-void updateUserFail() {
-        User user = User.builder().id(1L).build();
-        given(userRepository.findById(1L)).willReturn(Optional.empty());
-        assertThrows(UserNotFoundException.class, () -> {
-            userService.updateUser(1L, user);
-        });
-}
+
     @Test
-    void deleteUserSuccess() {
+    void updateUserFail() {
+        UserRq rq = UserRq.builder().build();
+        given(userRepository.findById(1L)).willReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class, () -> {
+            userService.update(1L, rq);
+        });
+    }
+
+    @Test
+    void deleteByIdUserSuccess() {
         User user = User.builder().id(1L).build();
         given(userRepository.findById(1L)).willReturn(Optional.of(user));
 
-        userService.deleteUser(1L);
+        userService.deleteById(1L);
 
         verify(userRepository, times(1)).delete(user);
     }
-    @Test
-    void deleteUserFail() {
 
-        User user = User.builder().id(1L).build();
+    @Test
+    void deleteByIdUserFail() {
+
         given(userRepository.findById(1L)).willReturn(Optional.empty());
-        assertThrows(UserNotFoundException.class, () -> {userService.deleteUser(1L);});
+
+        assertThrows(UserNotFoundException.class, () -> {
+            userService.deleteById(1L);
+        });
     }
 
     @Test
@@ -194,20 +247,37 @@ void updateUserFail() {
                 .roles(roles)
                 .enabled(true)
                 .build();
-        given(userRepository.findByUsername(user.getUsername())).willReturn(Optional.of(user));
-        given(roleRepository.findByName(RoleType.ROLE_ADMIN)).willReturn(Optional.of(roleAdmin));
-        given(userRepository.save(user)).willReturn(user);
 
-        userService.assignRoleToUser("admin", RoleType.ROLE_ADMIN);
+        given(userRepository.findByUsername(anyString())).willReturn(Optional.of(user));
+        given(roleRepository.findByName(any(RoleType.class))).willReturn(Optional.of(roleAdmin));
+        given(userRepository.save(any(User.class))).willReturn(user);
 
-        assertEquals(Set.of(roleUser, roleAdmin), user.getRoles());
+        userService.assignRoleToUser("admin", "ROLE_ADMIN");
+
         verify(userRepository, times(1)).findByUsername(user.getUsername());
         verify(roleRepository, times(1)).findByName(RoleType.ROLE_ADMIN);
+        verify(userRepository, times(1)).save(user);
     }
+
     @Test
-    void assignRoleToUserFail() {
+    void assignRoleToUserUserNotFoundFail() {
 
+        given(userRepository.findByUsername(any(String.class))).willReturn(Optional.empty());
 
-
+        assertThrows(UserNotFoundException.class,
+                () -> userService.assignRoleToUser("admin", "ROLE_ADMIN"));
     }
+
+    @Test
+    void assignRoleToUserRoleNotFoundFail() {
+        User user = User.builder().id(1L).build();
+
+        given(userRepository.findByUsername(any(String.class))).willReturn(Optional.of(user));
+        given(roleRepository.findByName(any(RoleType.class))).willReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class,
+                () -> userService.assignRoleToUser("admin", "ROLE_ADMIN"));
+    }
+
+
 }
