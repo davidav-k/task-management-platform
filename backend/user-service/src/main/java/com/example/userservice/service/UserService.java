@@ -7,16 +7,21 @@ import com.example.userservice.dto.UserToUserRsConverter;
 import com.example.userservice.entity.Role;
 import com.example.userservice.entity.RoleType;
 import com.example.userservice.entity.User;
+import com.example.userservice.exception.EmailAlreadyInUseException;
 import com.example.userservice.exception.UserNotFoundException;
+import com.example.userservice.exception.UsernameAlreadyTakenException;
 import com.example.userservice.repo.RoleRepository;
 import com.example.userservice.repo.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -27,28 +32,35 @@ public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    @Value("${app.default.role}")
+    String roleNameDefault;
 
+
+    @Transactional
     public UserRs createUser(UserRq rq) {
 
-        User newUser = userRqToUserConverter.convert(rq);
-        assert newUser != null;
-        if (userRepository.findByUsername(newUser.getUsername()).isPresent()) {
-            throw new IllegalArgumentException("Username is already taken");
-        }
+        User newUser = Optional.ofNullable(userRqToUserConverter.convert(rq))
+                .orElseThrow(() -> new IllegalArgumentException("Conversion failed"));
 
-        if (userRepository.findByEmail(newUser.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("Email is already in use");
-        }
+        validateUniqueFields(newUser);
 
-        if (newUser.getRoles() == null || newUser.getRoles().isEmpty()) {
-            Role defaultRole = roleRepository.findByName(RoleType.ROLE_USER)
-                    .orElseThrow(() -> new IllegalArgumentException("Default role not found"));
-            newUser.getRoles().add(defaultRole);
-        }
+        Role defaultRole = roleRepository.findByName(RoleType.valueOf(roleNameDefault))
+                .orElseThrow(() -> new IllegalArgumentException("Default role not found"));
+        newUser.addRoleIfNotExists(defaultRole);
 
         User savedUser = userRepository.save(newUser);
-
         return userToUserRsConverter.convert(savedUser);
+    }
+
+    private void validateUniqueFields(@NotNull User user) {
+
+        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
+            throw new UsernameAlreadyTakenException("Username is already taken");
+        }
+
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            throw new EmailAlreadyInUseException("Email is already in use");
+        }
     }
 
     public UserRs findById(Long id) {
@@ -75,36 +87,20 @@ public class UserService {
         return users.stream().map(userToUserRsConverter::convert).toList();
     }
 
+    @Transactional
     public UserRs update(Long userId, UserRq rq) {
 
-        User updatedUser = userRqToUserConverter.convert(rq);
+        User updatedUser = Optional.ofNullable(userRqToUserConverter.convert(rq))
+                .orElseThrow(() -> new IllegalArgumentException("Conversion failed"));
 
         User existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        assert updatedUser != null;
         validateUsernameAndEmailForUpdate(existingUser, updatedUser);
-        updatePasswordIfProvided(existingUser, updatedUser);
-        updateRolesIfProvided(existingUser, updatedUser);
-
-        existingUser.setUsername(updatedUser.getUsername());
-        existingUser.setEmail(updatedUser.getEmail());
-        existingUser.setEnabled(updatedUser.isEnabled());
+        existingUser.updateFields(updatedUser, passwordEncoder);
 
         User savedUser = userRepository.save(existingUser);
         return userToUserRsConverter.convert(savedUser);
-    }
-
-    private void updateRolesIfProvided(User existingUser, @NotNull User updatedUser) {
-        if (updatedUser.getRoles() != null && !updatedUser.getRoles().isEmpty()) {
-            existingUser.setRoles(updatedUser.getRoles());
-        }
-    }
-
-    private void updatePasswordIfProvided(User existingUser, @NotNull User updatedUser) {
-        if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
-            existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
-        }
     }
 
     private void validateUsernameAndEmailForUpdate(@NotNull User existingUser, @NotNull User updatedUser) {
@@ -117,17 +113,17 @@ public class UserService {
                 userRepository.findByEmail(updatedUser.getEmail()).isPresent()) {
             throw new IllegalArgumentException("Email is already in use");
         }
-
-
     }
 
-    public void deleteById(Long userId){
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new UserNotFoundException("User not found"));
+    @Transactional
+    public void deleteById(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-            userRepository.delete(user);
+        userRepository.delete(user);
     }
 
+    @Transactional
     public void assignRoleToUser(String username, String roleName) {
 
         User user = userRepository.findByUsername(username)
@@ -136,10 +132,9 @@ public class UserService {
         Role role = roleRepository.findByName(RoleType.valueOf(roleName))
                 .orElseThrow(() -> new EntityNotFoundException("Role not found"));
 
-        if (!user.getRoles().contains(role)) {
-            user.getRoles().add(role);
-            userRepository.save(user);
-        }
+        user.addRoleIfNotExists(role);
+        userRepository.save(user);
     }
 }
+
 

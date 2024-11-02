@@ -28,6 +28,16 @@ public class ExceptionHandlerAdvice {
         return new Result(false, StatusCode.NOT_FOUND, ex.getMessage());
     }
 
+    @ExceptionHandler(UserNotFoundException.class)
+    Result handleUserNotFound(UserNotFoundException ex) {
+        return new Result(false, StatusCode.NOT_FOUND, "user not found", ex.getMessage());
+    }
+
+    @ExceptionHandler({UsernameAlreadyTakenException.class, EmailAlreadyInUseException.class})
+    Result handleValidationExceptions(RuntimeException ex) {
+        return new Result(false, StatusCode.INVALID_ARGUMENT, "username or password is incorrect", ex.getMessage());
+    }
+
 //    @ExceptionHandler(IllegalAccessException.class)
 //    @ResponseStatus(HttpStatus.BAD_REQUEST)
 //    Result handleIllegalAccessException(@NotNull IllegalAccessException ex) {

@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -43,6 +44,31 @@ public class User {
     private Set<Role> roles = new HashSet<>();
 
     private boolean enabled;
+
+    public void updateFields(User updatedUser, PasswordEncoder passwordEncoder) {
+        if (updatedUser.getUsername() != null && !updatedUser.getUsername().isBlank()){
+            this.username = updatedUser.getUsername();
+        }
+
+        if (updatedUser.getEmail() != null && !updatedUser.getEmail().isBlank()){
+            this.username = updatedUser.getEmail();
+        }
+
+        if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
+            this.password = passwordEncoder.encode(updatedUser.getPassword());
+        }
+
+        if (updatedUser.getRoles() != null && !updatedUser.getRoles().isEmpty()) {
+            this.roles = updatedUser.getRoles();
+        }
+    }
+
+    public void addRoleIfNotExists(Role role) {
+        if (this.roles.stream().noneMatch(r -> r.getName().equals(role.getName()))) {
+            this.roles.add(role);
+        }
+    }
+
 
 }
 

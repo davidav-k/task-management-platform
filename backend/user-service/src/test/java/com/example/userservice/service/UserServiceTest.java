@@ -8,7 +8,9 @@ import com.example.userservice.dto.UserToUserRsConverter;
 import com.example.userservice.entity.Role;
 import com.example.userservice.entity.RoleType;
 import com.example.userservice.entity.User;
+import com.example.userservice.exception.EmailAlreadyInUseException;
 import com.example.userservice.exception.UserNotFoundException;
+import com.example.userservice.exception.UsernameAlreadyTakenException;
 import com.example.userservice.repo.RoleRepository;
 import com.example.userservice.repo.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -53,7 +55,7 @@ class UserServiceTest {
                 .id(1L)
                 .username("admin")
                 .email("admin@mail.com")
-                .roles(List.of())
+                .roles(List.of("ROLE_ADMIN"))
                 .isEnabled(true)
                 .build();
         UserRq rq = UserRq.builder()
@@ -66,6 +68,7 @@ class UserServiceTest {
         given(userRqToUserConverter.convert(any(UserRq.class))).willReturn(user);
         given(userRepository.findByUsername(any(String.class))).willReturn(Optional.empty());
         given(userRepository.findByEmail(any(String.class))).willReturn(Optional.empty());
+        given(roleRepository.findByName(any(RoleType.class))).willReturn(Optional.of(roleAdmin));
         given(userRepository.save(any(User.class))).willReturn(user);
         given(userToUserRsConverter.convert(any(User.class))).willReturn(rs);
 
@@ -87,7 +90,7 @@ class UserServiceTest {
         given(userRqToUserConverter.convert(any(UserRq.class))).willReturn(user);
         given(userRepository.findByUsername(any(String.class))).willReturn(Optional.of(user));
 
-        assertThrows(IllegalArgumentException.class, () -> userService.createUser(rq));
+        assertThrows(UsernameAlreadyTakenException.class, () -> userService.createUser(rq));
     }
 
     @Test
@@ -101,9 +104,8 @@ class UserServiceTest {
         given(userRepository.findByUsername(any(String.class))).willReturn(Optional.empty());
         given(userRepository.findByEmail(any(String.class))).willReturn(Optional.of(user));
 
-        assertThrows(IllegalArgumentException.class, () -> userService.createUser(rq));
+        assertThrows(EmailAlreadyInUseException.class, () -> userService.createUser(rq));
     }
-
 
     @Test
     void findByIdSuccess() {
@@ -182,7 +184,7 @@ class UserServiceTest {
     }
 
     @Test
-    void updateUserSuccess() {
+    void updateSuccess() {
         Role roleAdmin = Role.builder().name(RoleType.ROLE_ADMIN).build();
         User user = User.builder().id(1L).username("admin").email("admin@mail.com").password("password")
                 .roles(Set.of(roleAdmin)).enabled(true).build();
@@ -204,11 +206,11 @@ class UserServiceTest {
     }
 
     @Test
-    void updateUserFail() {
+    void updateFail() {
         UserRq rq = UserRq.builder().build();
         given(userRepository.findById(1L)).willReturn(Optional.empty());
 
-        assertThrows(UserNotFoundException.class, () -> {
+        assertThrows(IllegalArgumentException.class, () -> {
             userService.update(1L, rq);
         });
     }

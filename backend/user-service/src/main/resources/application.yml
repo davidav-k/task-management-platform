@@ -38,4 +38,8 @@ api:
   endpoint:
     base-url: /api/v1
 
+app:
+  default:
+    role: ROLE_USER
+
 
