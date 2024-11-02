@@ -18,19 +18,23 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @SpringBootTest
 @ExtendWith(MockitoExtension.class)
+@ActiveProfiles(value = "dev-h2")
 class UserServiceTest {
     @Autowired
     UserService userService;
@@ -44,6 +48,8 @@ class UserServiceTest {
     private UserRqToUserConverter userRqToUserConverter;
     @MockBean
     private PasswordEncoder passwordEncoder;
+    @MockBean
+    private CommandLineRunner commandLineRunner; // don't load data
 
 
     @Test
