@@ -43,7 +43,8 @@ public class User {
     @Builder.Default
     private Set<Role> roles = new HashSet<>();
 
-    private boolean enabled;
+    @Builder.Default
+    private boolean enabled = true;
 
     public void updateFields(User updatedUser, PasswordEncoder passwordEncoder) {
         if (updatedUser.getUsername() != null && !updatedUser.getUsername().isBlank()){

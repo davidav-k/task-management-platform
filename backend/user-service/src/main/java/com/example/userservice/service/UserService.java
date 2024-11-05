@@ -32,6 +32,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+
     @Value("${app.default.role}")
     String roleNameDefault;
 
@@ -42,7 +43,9 @@ public class UserService {
         User newUser = Optional.ofNullable(userRqToUserConverter.convert(rq))
                 .orElseThrow(() -> new IllegalArgumentException("Conversion failed"));
 
-        validateUniqueFields(newUser);
+        if (userRepository.existsByUsername(newUser.getUsername()) || userRepository.existsByEmail(newUser.getEmail())) {
+            throw new UsernameAlreadyTakenException("Username or email already in use");
+        }
 
         Role defaultRole = roleRepository.findByName(RoleType.valueOf(roleNameDefault))
                 .orElseThrow(() -> new IllegalArgumentException("Default role not found"));
@@ -50,17 +53,6 @@ public class UserService {
 
         User savedUser = userRepository.save(newUser);
         return userToUserRsConverter.convert(savedUser);
-    }
-
-    private void validateUniqueFields(@NotNull User user) {
-
-        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
-            throw new UsernameAlreadyTakenException("Username is already taken");
-        }
-
-        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-            throw new EmailAlreadyInUseException("Email is already in use");
-        }
     }
 
     public UserRs findById(Long id) {
