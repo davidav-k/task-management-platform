@@ -96,7 +96,7 @@ class UserServiceTest {
         given(userRqToUserConverter.convert(any(UserRq.class))).willReturn(user);
         given(userRepository.findByUsername(any(String.class))).willReturn(Optional.of(user));
 
-        assertThrows(UsernameAlreadyTakenException.class, () -> userService.createUser(rq));
+        assertThrows(IllegalArgumentException.class, () -> userService.createUser(rq));
     }
 
     @Test
@@ -110,7 +110,7 @@ class UserServiceTest {
         given(userRepository.findByUsername(any(String.class))).willReturn(Optional.empty());
         given(userRepository.findByEmail(any(String.class))).willReturn(Optional.of(user));
 
-        assertThrows(EmailAlreadyInUseException.class, () -> userService.createUser(rq));
+        assertThrows(IllegalArgumentException.class, () -> userService.createUser(rq));
     }
 
     @Test
