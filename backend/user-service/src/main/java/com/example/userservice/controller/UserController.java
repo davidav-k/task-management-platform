@@ -7,6 +7,7 @@ import com.example.userservice.dto.UserRs;
 import com.example.userservice.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,12 +21,14 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping()
+    @PreAuthorize("hasRole('ADMIN')")
     Result createUser(@Valid @RequestBody UserRq rq){
         UserRs rs = userService.createUser(rq);
         return new Result(true, StatusCode.SUCCESS, "User created successfully", rs);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public Result findById(@PathVariable Long id) {
 
         UserRs rs = userService.findById(id);
@@ -35,6 +38,7 @@ public class UserController {
 
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public Result findAll() {
 
         List<UserRs> usersRs = userService.findAll();
@@ -43,6 +47,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public Result update(@PathVariable Long id, @RequestBody @Valid UserRq rq) {
 
         UserRs rs = userService.update(id, rq);
@@ -51,6 +56,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public Result deleteById(@PathVariable Long id) {
 
         userService.deleteById(id);
@@ -59,6 +65,7 @@ public class UserController {
     }
 
     @PostMapping("/change-role/{username}")
+    @PreAuthorize("hasRole('ADMIN')")
     public Result assignRoleToUser(@PathVariable String username, @RequestBody String roleName){
 
         userService.assignRoleToUser(username, roleName);

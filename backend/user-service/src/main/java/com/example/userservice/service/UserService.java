@@ -54,11 +54,11 @@ public class UserService {
 
     private void validateUniqueFields(@NotNull User user) {
 
-        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
+        if (userRepository.existsByUsername(user.getUsername())) {
             throw new UsernameAlreadyTakenException("Username is already taken");
         }
 
-        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+        if (userRepository.existsByEmail(user.getEmail())) {
             throw new EmailAlreadyInUseException("Email is already in use");
         }
     }

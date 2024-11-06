@@ -1,38 +1,26 @@
 spring:
   application:
     name: user-service
-  jpa:
-    hibernate:
-      ddl-auto: none
-    show-sql: true
   profiles:
-    active: dev-h2
+    active: dev-local
 
-redis:
-  host: localhost
-  port: 6379
-  password: ""
-
-jwt:
-  secret: supersecretkey
-  expiration-time: 3600000 # 1 hour
 
 #eureka:
 #  client:
 #    service-url:
 #      defaultZone: http://localhost:8761/eureka/
 
-eureka:
-  client:
-    enabled: false
-
-feign:
-  hystrix:
-    enabled: true
-
-logging:
-  level:
-    org.springframework: INFO
+#eureka:
+#  client:
+#    enabled: false
+#
+#feign:
+#  hystrix:
+#    enabled: true
+#
+#logging:
+#  level:
+#    org.springframework: INFO
 
 api:
   endpoint:
@@ -41,5 +29,3 @@ api:
 app:
   default:
     role: ROLE_USER
-
-

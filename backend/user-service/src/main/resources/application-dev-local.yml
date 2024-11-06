@@ -1,25 +1,34 @@
 spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
   config:
     activate:
       on-profile: dev-local
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/userdb
+    url: jdbc:postgresql://localhost:5432/tsp
     driver-class-name: org.postgresql.Driver
     username: postgres
     password: postgres
+    hikari:
+      schema: tsp
+      connection-init-sql: CREATE SCHEMA IF NOT EXISTS tsp
+      connection-timeout: 10000
+
   jpa:
-    hibernate:
-      ddl-auto: update
+#    hibernate:
+#      ddl-auto: update
     show-sql: true
+    generate-ddl: true
 
-# Redis для хранения access токенов
-redis:
-  host: localhost
-  port: 6379
-  password: ""
+app:
+  jwt:
+    secret: "dev-local-secret-key"
+    tokenExpiration: 3m
+    refreshTokenExpiration: 30m
 
-jwt:
-  secret: dev-local-secret-key
-  expiration-time: 3600000
+
 

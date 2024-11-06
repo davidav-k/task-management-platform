@@ -38,12 +38,6 @@ public class ExceptionHandlerAdvice {
         return new Result(false, StatusCode.INVALID_ARGUMENT, "username or password is incorrect", ex.getMessage());
     }
 
-//    @ExceptionHandler(IllegalAccessException.class)
-//    @ResponseStatus(HttpStatus.BAD_REQUEST)
-//    Result handleIllegalAccessException(@NotNull IllegalAccessException ex) {
-//        return new Result(false, StatusCode.INVALID_ARGUMENT,"Provided arguments are not valid", ex.getMessage());
-//    }
-
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     Result handleHttpMediaTypeNotSupportedException(@NotNull HttpMediaTypeNotSupportedException ex) {
@@ -70,6 +64,25 @@ public class ExceptionHandlerAdvice {
         return new Result(false, StatusCode.INVALID_ARGUMENT, "Provided arguments are not valid", map);
     }
 
+    @ExceptionHandler(RefreshTokenException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    Result handleRefreshTokenException(@NotNull RefreshTokenException ex) {
+        return new Result(false, StatusCode.FORBIDDEN, ex.getMessage());
+    }
+
+    @ExceptionHandler(AlreadyExitsException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    Result handleAlreadyExitsException(@NotNull AlreadyExitsException ex) {
+        return new Result(false, StatusCode.INVALID_ARGUMENT, ex.getMessage());
+    }
+
+
+
+//    @ExceptionHandler(IllegalAccessException.class)
+//    @ResponseStatus(HttpStatus.BAD_REQUEST)
+//    Result handleIllegalAccessException(@NotNull IllegalAccessException ex) {
+//        return new Result(false, StatusCode.INVALID_ARGUMENT,"Provided arguments are not valid", ex.getMessage());
+//    }
 //    @ExceptionHandler({UsernameNotFoundException.class, BadCredentialsException.class,  })
 //    @ResponseStatus(HttpStatus.UNAUTHORIZED)
 //    Result handleAuthenticationException(@NotNull Exception ex) {
