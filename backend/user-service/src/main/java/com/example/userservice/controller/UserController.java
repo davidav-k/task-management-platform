@@ -22,13 +22,13 @@ public class UserController {
 
     @PostMapping()
     @PreAuthorize("hasRole('ADMIN')")
-    Result createUser(@Valid @RequestBody UserRq rq){
-        UserRs rs = userService.createUser(rq);
-        return new Result(true, StatusCode.SUCCESS, "User created successfully", rs);
+    public Result createUser(@RequestBody @Valid UserRq rq){
+        userService.createUser(rq);
+        return new Result(true, StatusCode.SUCCESS, "User created successfully");
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     public Result findById(@PathVariable Long id) {
 
         UserRs rs = userService.findById(id);
@@ -38,16 +38,16 @@ public class UserController {
 
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     public Result findAll() {
 
-        List<UserRs> usersRs = userService.findAll();
+        List<UserRs> rs = userService.findAll();
 
-        return new Result(true,StatusCode.SUCCESS, "Found all", usersRs);
+        return new Result(true,StatusCode.SUCCESS, "Found all", rs);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     public Result update(@PathVariable Long id, @RequestBody @Valid UserRq rq) {
 
         UserRs rs = userService.update(id, rq);
@@ -66,7 +66,7 @@ public class UserController {
 
     @PostMapping("/change-role/{username}")
     @PreAuthorize("hasRole('ADMIN')")
-    public Result assignRoleToUser(@PathVariable String username, @RequestBody String roleName){
+    public Result assignRoleToUser(@PathVariable String username, @RequestBody @Valid String roleName){
 
         userService.assignRoleToUser(username, roleName);
 

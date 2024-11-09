@@ -22,7 +22,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.util.*;
 
@@ -34,7 +33,6 @@ import static org.mockito.Mockito.verify;
 
 @SpringBootTest
 @ExtendWith(MockitoExtension.class)
-@ActiveProfiles(value = "dev-h2")
 class UserServiceTest {
     @Autowired
     UserService userService;
@@ -87,28 +85,28 @@ class UserServiceTest {
     }
 
     @Test
-    void createUserEmptyUsernameFail() {
+    void createUserWithAlreadyUsedUsernameFail() {
         Role roleAdmin = Role.builder().name(RoleType.ROLE_ADMIN).build();
         User user = User.builder().id(1L).username("admin").email("admin@mail.com").password("password")
                 .roles(Set.of(roleAdmin)).enabled(true).build();
         UserRq rq = UserRq.builder().username("admin").email("admin@mail.com").password("password")
                 .roles(List.of("ROLE_ADMIN")).build();
         given(userRqToUserConverter.convert(any(UserRq.class))).willReturn(user);
-        given(userRepository.findByUsername(any(String.class))).willReturn(Optional.of(user));
+        given(userRepository.existsByUsername(anyString())).willReturn(true);
 
         assertThrows(UsernameAlreadyTakenException.class, () -> userService.createUser(rq));
     }
 
     @Test
-    void createUserEmptyEmailFail() {
+    void createUserWithAlreadyUsedEmailFail() {
         Role roleAdmin = Role.builder().name(RoleType.ROLE_ADMIN).build();
         User user = User.builder().id(1L).username("admin").email("admin@mail.com").password("password")
                 .roles(Set.of(roleAdmin)).enabled(true).build();
         UserRq rq = UserRq.builder().username("admin").email("admin@admin.com").password("password")
                 .roles(List.of("ROLE_ADMIN")).build();
         given(userRqToUserConverter.convert(any(UserRq.class))).willReturn(user);
-        given(userRepository.findByUsername(any(String.class))).willReturn(Optional.empty());
-        given(userRepository.findByEmail(any(String.class))).willReturn(Optional.of(user));
+        given(userRepository.existsByUsername(anyString())).willReturn(false);
+        given(userRepository.existsByEmail(anyString())).willReturn(true);
 
         assertThrows(EmailAlreadyInUseException.class, () -> userService.createUser(rq));
     }

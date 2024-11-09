@@ -6,16 +6,28 @@ import com.example.userservice.dto.UserRs;
 import com.example.userservice.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,9 +39,17 @@ import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
+
+@ExtendWith(SpringExtension.class)
 @SpringBootTest
-@AutoConfigureMockMvc(addFilters = false)
-@ActiveProfiles(value = "dev-h2")
+@AutoConfigureMockMvc
+@Transactional
+//@ActiveProfiles("test")
+@Testcontainers
+@Slf4j
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+//@SpringBootTest
+//@AutoConfigureMockMvc(addFilters = false)
 class UserControllerTest {
 
     @Autowired
@@ -45,8 +65,30 @@ class UserControllerTest {
     String baseUrl;
 
 
+    @Container
+    public static PostgreSQLContainer<?> postgresContainer = new PostgreSQLContainer<>("postgres:13")
+            .withDatabaseName("test_db")
+            .withUsername("test_user")
+            .withPassword("test_password");
+
+    @Container
+    public static GenericContainer<?> redisContainer = new GenericContainer<>("redis:latest")
+            .withExposedPorts(6379);
+
+    @BeforeAll
+    static void setUp() {
+        System.setProperty("spring.datasource.url", postgresContainer.getJdbcUrl());
+        System.setProperty("spring.datasource.username", postgresContainer.getUsername());
+        System.setProperty("spring.datasource.password", postgresContainer.getPassword());
+
+        System.setProperty("spring.redis.host", redisContainer.getHost());
+        System.setProperty("spring.redis.port", redisContainer.getMappedPort(6379).toString());
+    }
+
+
     @Test
-    void createUserSuccess() throws Exception {
+    @WithMockUser(roles = "ADMIN")
+    void createUserAsAdminSuccess() throws Exception {
 
         UserRs rs = UserRs.builder()
                 .id(1L)
@@ -73,16 +115,11 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.timestamp").isNotEmpty())
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.message").value("User created successfully"))
-                .andExpect(jsonPath("$.data").exists())
-                .andExpect(jsonPath("$.data.username").value("admin"))
-                .andExpect(jsonPath("$.data.email").value("admin@mail.com"))
-                .andExpect(jsonPath("$.data.roles").isArray())
-                .andExpect(jsonPath("$.data.roles[0]").value("ROLE_ADMIN"))
-                .andExpect(jsonPath("$.data.password").doesNotExist());
+                .andExpect(jsonPath("$.message").value("User created successfully"));
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     void createUserFail() throws Exception {
         UserRq rq = UserRq.builder().username("").email("").password("").roles(List.of()).build();
         mockMvc.perform(

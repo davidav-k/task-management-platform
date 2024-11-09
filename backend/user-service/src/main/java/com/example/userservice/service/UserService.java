@@ -20,8 +20,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,33 +35,43 @@ public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+
     @Value("${app.default.role}")
     String roleNameDefault;
-
 
     @Transactional
     public UserRs createUser(UserRq rq) {
 
+        validateUniqueFields(rq);
+
         User newUser = Optional.ofNullable(userRqToUserConverter.convert(rq))
                 .orElseThrow(() -> new IllegalArgumentException("Conversion failed"));
 
-        validateUniqueFields(newUser);
-
-        Role defaultRole = roleRepository.findByName(RoleType.valueOf(roleNameDefault))
-                .orElseThrow(() -> new IllegalArgumentException("Default role not found"));
-        newUser.addRoleIfNotExists(defaultRole);
+        Set<Role> roles = new HashSet<>();
+        if (rq.getRoles() == null || rq.getRoles().isEmpty()) {
+            Role defaultRole = roleRepository.findByName(RoleType.valueOf(roleNameDefault))
+                    .orElseThrow(() -> new IllegalArgumentException("Default role not found"));
+            roles.add(defaultRole);
+        } else {
+            roles = rq.getRoles().stream()
+                    .map(roleName -> roleRepository.findByName(RoleType.valueOf(roleName))
+                            .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleName)))
+                    .collect(Collectors.toSet());
+        }
+        newUser.setRoles(roles);
 
         User savedUser = userRepository.save(newUser);
+
         return userToUserRsConverter.convert(savedUser);
     }
 
-    private void validateUniqueFields(@NotNull User user) {
+    private void validateUniqueFields(@NotNull UserRq rq) {
 
-        if (userRepository.existsByUsername(user.getUsername())) {
+        if (userRepository.existsByUsername(rq.getUsername())) {
             throw new UsernameAlreadyTakenException("Username is already taken");
         }
 
-        if (userRepository.existsByEmail(user.getEmail())) {
+        if (userRepository.existsByEmail(rq.getEmail())) {
             throw new EmailAlreadyInUseException("Email is already in use");
         }
     }
@@ -92,6 +105,11 @@ public class UserService {
 
         User updatedUser = Optional.ofNullable(userRqToUserConverter.convert(rq))
                 .orElseThrow(() -> new IllegalArgumentException("Conversion failed"));
+        Set<Role> updateRoles = rq.getRoles().stream()
+                .map(roleName -> roleRepository.findByName(RoleType.valueOf(roleName))
+                        .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleName)))
+                .collect(Collectors.toSet());
+        updatedUser.setRoles(updateRoles);
 
         User existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
@@ -104,6 +122,7 @@ public class UserService {
     }
 
     private void validateUsernameAndEmailForUpdate(@NotNull User existingUser, @NotNull User updatedUser) {
+
         if (!existingUser.getUsername().equals(updatedUser.getUsername()) &&
                 userRepository.findByUsername(updatedUser.getUsername()).isPresent()) {
             throw new IllegalArgumentException("Username is already taken");
@@ -132,7 +151,7 @@ public class UserService {
         Role role = roleRepository.findByName(RoleType.valueOf(roleName))
                 .orElseThrow(() -> new EntityNotFoundException("Role not found"));
 
-        user.addRoleIfNotExists(role);
+        user.changeRole(role);
         userRepository.save(user);
     }
 }

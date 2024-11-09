@@ -1,7 +1,6 @@
 package com.example.userservice.controller;
 
 import com.example.userservice.dto.*;
-import com.example.userservice.repo.UserRepository;
 import com.example.userservice.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,20 +18,20 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @PostMapping("signin")
+    @PostMapping("/signin")
     public Result authenticateUser(@RequestBody @Valid LoginRq rq){
         AuthRs authRs = authService.authenticateUser(rq);
         return new Result(true, StatusCode.SUCCESS, "User login successfully", authRs);
     }
 
     @PostMapping("/register")
-    public Result register(@RequestBody UserRq rq) {
+    public Result register(@RequestBody @Valid UserRq rq) {
         authService.register(rq);
         return new Result(true,StatusCode.SUCCESS, "User registered");
     }
 
     @PostMapping("/refresh-token")
-    public Result refreshToken(@RequestBody RefreshTokenRq rq) {
+    public Result refreshToken(@RequestBody @Valid RefreshTokenRq rq) {
         RefreshTokenRs rs = authService.refreshToken(rq);
         return new Result(true,StatusCode.SUCCESS, "Refresh token returned", rs);
     }

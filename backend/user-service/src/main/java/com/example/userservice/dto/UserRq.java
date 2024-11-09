@@ -2,13 +2,17 @@ package com.example.userservice.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Builder
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public  class UserRq{
 
 
@@ -23,4 +27,6 @@ public  class UserRq{
         String password;
 
         List<String> roles;
+
+        boolean enable;
 }

@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashSet;
@@ -45,13 +46,13 @@ public class User {
 
     private boolean enabled;
 
-    public void updateFields(User updatedUser, PasswordEncoder passwordEncoder) {
-        if (updatedUser.getUsername() != null && !updatedUser.getUsername().isBlank()){
+    public void updateFields(@NotNull User updatedUser, PasswordEncoder passwordEncoder) {
+        if (updatedUser.getUsername() != null && !updatedUser.getUsername().isBlank()) {
             this.username = updatedUser.getUsername();
         }
 
-        if (updatedUser.getEmail() != null && !updatedUser.getEmail().isBlank()){
-            this.username = updatedUser.getEmail();
+        if (updatedUser.getEmail() != null && !updatedUser.getEmail().isBlank()) {
+            this.email = updatedUser.getEmail();
         }
 
         if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
@@ -61,14 +62,15 @@ public class User {
         if (updatedUser.getRoles() != null && !updatedUser.getRoles().isEmpty()) {
             this.roles = updatedUser.getRoles();
         }
+
+        this.enabled = updatedUser.isEnabled();
+
     }
 
-    public void addRoleIfNotExists(Role role) {
-        if (this.roles.stream().noneMatch(r -> r.getName().equals(role.getName()))) {
-            this.roles.add(role);
-        }
+    public void changeRole(Role role) {
+        this.roles.clear();
+        this.roles.add(role);
     }
-
 
 }
 

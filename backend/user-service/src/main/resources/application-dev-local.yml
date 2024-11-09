@@ -19,16 +19,16 @@ spring:
       connection-timeout: 10000
 
   jpa:
-#    hibernate:
-#      ddl-auto: update
-    show-sql: true
+    hibernate:
+      ddl-auto: update
+    show-sql: false
     generate-ddl: true
 
 app:
   jwt:
     secret: "dev-local-secret-key"
-    tokenExpiration: 3m
-    refreshTokenExpiration: 30m
+    tokenExpiration: 30m
+    refreshTokenExpiration: 300m
 
 
 

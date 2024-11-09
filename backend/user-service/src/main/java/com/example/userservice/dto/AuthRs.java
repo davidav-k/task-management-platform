@@ -14,14 +14,9 @@ import java.util.List;
 public class AuthRs {
 
     private Long id;
-
     private String token;
-
     private String refreshToken;
-
     private String username;
-
     private String email;
-
     private List<String> roles;
 }

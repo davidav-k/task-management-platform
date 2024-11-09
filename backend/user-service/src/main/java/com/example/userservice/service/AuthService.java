@@ -2,13 +2,8 @@ package com.example.userservice.service;
 
 import com.example.userservice.dto.*;
 import com.example.userservice.entity.RefreshToken;
-import com.example.userservice.entity.Role;
-import com.example.userservice.entity.RoleType;
 import com.example.userservice.entity.User;
-import com.example.userservice.exception.EmailAlreadyInUseException;
 import com.example.userservice.exception.RefreshTokenException;
-import com.example.userservice.exception.UsernameAlreadyTakenException;
-import com.example.userservice.repo.RoleRepository;
 import com.example.userservice.repo.UserRepository;
 import com.example.userservice.security.AppUserDetails;
 import com.example.userservice.security.jwt.JwtUtils;
@@ -19,12 +14,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,11 +25,10 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final RefreshTokenService refreshTokenService;
+    private final UserService userService;
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
-    private final PasswordEncoder passwordEncoder;
 
-    public AuthRs authenticateUser(LoginRq rq){
+    public AuthRs authenticateUser(@NotNull LoginRq rq){
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 rq.getUsername(),
                 rq.getPassword()
@@ -65,27 +56,7 @@ public class AuthService {
 
     public void register(@NotNull UserRq rq){
 
-        if (userRepository.existsByUsername(rq.getUsername())) {
-            throw new UsernameAlreadyTakenException("Username is already taken");
-        }
-
-        if (userRepository.existsByEmail(rq.getEmail())) {
-            throw new EmailAlreadyInUseException("Email is already in use");
-        }
-
-        Set<Role> roles = rq.getRoles().stream()
-                .map(roleName -> roleRepository.findByName(RoleType.valueOf(roleName))
-                        .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleName)))
-                .collect(Collectors.toSet());
-
-        User user = User.builder()
-                .username(rq.getUsername())
-                .email(rq.getEmail())
-                .password(passwordEncoder.encode(rq.getPassword()))
-                .roles(roles)
-                .build();
-
-        userRepository.save(user);
+        userService.createUser(rq);
 
     }
 

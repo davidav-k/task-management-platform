@@ -16,7 +16,7 @@ import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
-@Profile("dev-h2")
+@Profile({"dev-local"})
 public class DBDataInitializer implements CommandLineRunner {
 
     private final PasswordEncoder passwordEncoder;
@@ -26,25 +26,27 @@ public class DBDataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        Role roleAdmin = Role.builder().name(RoleType.ROLE_ADMIN).build();
-        Role roleUser = Role.builder().name(RoleType.ROLE_USER).build();
-        roleAdmin = roleRepository.save(roleAdmin);
-        roleUser = roleRepository.save(roleUser);
-        User admin = User.builder()
-                .username("admin")
-                .password(passwordEncoder.encode("passadmin"))
-                .email("admin@mail.com")
-                .roles(Set.of(roleAdmin))
-                .enabled(true)
-                .build();
-        User user = User.builder()
-                .username("user")
-                .password(passwordEncoder.encode("passuser"))
-                .email("user@mail.com")
-                .roles(Set.of(roleUser))
-                .enabled(true)
-                .build();
-        userRepository.save(admin);
-        userRepository.save(user);
+        if (userRepository.count() == 0){
+            Role roleAdmin = Role.builder().id(1L).name(RoleType.ROLE_ADMIN).build();
+            Role roleUser = Role.builder().id(2L).name(RoleType.ROLE_USER).build();
+            roleAdmin = roleRepository.save(roleAdmin);
+            roleUser = roleRepository.save(roleUser);
+            User admin = User.builder()
+                    .username("admin")
+                    .password(passwordEncoder.encode("passadmin"))
+                    .email("admin@mail.com")
+                    .roles(Set.of(roleAdmin))
+                    .enabled(true)
+                    .build();
+            User user = User.builder()
+                    .username("user")
+                    .password(passwordEncoder.encode("passuser"))
+                    .email("user@mail.com")
+                    .roles(Set.of(roleUser))
+                    .enabled(true)
+                    .build();
+            userRepository.save(admin);
+            userRepository.save(user);
+        }
     }
 }

@@ -49,7 +49,9 @@ public class RefreshTokenService {
     }
 
     public void deleteByUserId(Long userId){
-        refreshTokenRepository.deleteByUserId(userId);
+        RefreshToken refreshToken = refreshTokenRepository.findByUserId(userId)
+                .orElseThrow(() -> new RefreshTokenException("Refresh token not found"));
+        refreshTokenRepository.delete(refreshToken);
     }
 
 

@@ -6,10 +6,12 @@ import com.example.userservice.entity.User;
 import com.example.userservice.repo.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -18,23 +20,16 @@ import java.util.stream.Collectors;
 public class UserRqToUserConverter implements Converter<UserRq, User> {
 
     private final PasswordEncoder passwordEncoder;
-    private final RoleRepository roleRepository;
+
 
     @Override
     public User convert(@NotNull UserRq rq) {
-
-        Set<Role> roles = rq.getRoles().stream()
-                .map(roleName -> roleRepository.findByName(RoleType.valueOf(roleName))
-                        .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleName)))
-                .collect(Collectors.toSet());
 
         return User.builder()
                 .username(rq.getUsername())
                 .email(rq.getEmail())
                 .password(passwordEncoder.encode(rq.getPassword()))
-                .roles(roles)
-                .enabled(true)
+                .enabled(rq.enable)
                 .build();
-
     }
 }
