@@ -78,7 +78,8 @@ public class UserService {
 
     public UserRs findById(Long id) {
 
-        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found"));
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         return userToUserRsConverter.convert(user);
     }
