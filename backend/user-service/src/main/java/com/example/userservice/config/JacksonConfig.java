@@ -8,6 +8,9 @@ import org.springframework.context.annotation.Configuration;
 /**
  * This class defines Registering JavaTimeModule in ObjectMapper
  * to convert fields of type "time" to "json" into JwtAuthenticationEntryPoint
+ *             <groupId>com.fasterxml.jackson.datatype</groupId>
+ *             <artifactId>jackson-datatype-jsr310</artifactId>
+ *
  */
 @Configuration
 public class JacksonConfig {
@@ -19,3 +22,4 @@ public class JacksonConfig {
         return mapper;    }
 
 }
+

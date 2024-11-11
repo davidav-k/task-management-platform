@@ -36,7 +36,6 @@ public class UserController {
         return new Result(true, StatusCode.SUCCESS, "Found one success", rs);
     }
 
-
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     public Result findAll() {

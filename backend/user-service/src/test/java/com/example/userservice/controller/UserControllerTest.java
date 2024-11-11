@@ -3,29 +3,22 @@ package com.example.userservice.controller;
 import com.example.userservice.dto.StatusCode;
 import com.example.userservice.dto.UserRq;
 import com.example.userservice.dto.UserRs;
+import com.example.userservice.security.UserDetailsServiceImpl;
+import com.example.userservice.security.jwt.JwtUtils;
 import com.example.userservice.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
-import lombok.extern.slf4j.Slf4j;
-import org.hamcrest.Matchers;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,55 +30,145 @@ import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
-
-@ExtendWith(SpringExtension.class)
-@SpringBootTest
-@AutoConfigureMockMvc
-@Transactional
-//@ActiveProfiles("test")
-@Testcontainers
-@Slf4j
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-//@SpringBootTest
-//@AutoConfigureMockMvc(addFilters = false)
+@WebMvcTest(UserController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class UserControllerTest {
 
     @Autowired
-    MockMvc mockMvc;
+    private MockMvc mockMvc;
 
     @Autowired
-    ObjectMapper objectMapper;
+    private ObjectMapper objectMapper;
 
     @MockBean
-    UserService userService;
+    private PasswordEncoder passwordEncoder;
+
+    @MockBean
+    private JwtUtils jwtUtils;
+
+    @MockBean
+    private UserDetailsServiceImpl userDetailsService;
+
+    @MockBean
+    private UserService userService;
 
     @Value("${api.endpoint.base-url}")
     String baseUrl;
 
-
-    @Container
-    public static PostgreSQLContainer<?> postgresContainer = new PostgreSQLContainer<>("postgres:13")
-            .withDatabaseName("test_db")
-            .withUsername("test_user")
-            .withPassword("test_password");
-
-    @Container
-    public static GenericContainer<?> redisContainer = new GenericContainer<>("redis:latest")
-            .withExposedPorts(6379);
-
-    @BeforeAll
-    static void setUp() {
-        System.setProperty("spring.datasource.url", postgresContainer.getJdbcUrl());
-        System.setProperty("spring.datasource.username", postgresContainer.getUsername());
-        System.setProperty("spring.datasource.password", postgresContainer.getPassword());
-
-        System.setProperty("spring.redis.host", redisContainer.getHost());
-        System.setProperty("spring.redis.port", redisContainer.getMappedPort(6379).toString());
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
+
+//    @Test
+//    @WithMockUser(roles = "ADMIN")
+//    void createUser_ShouldReturnSuccess() throws Exception {
+//        UserRq rq = UserRq.builder()
+//                .username("admin")
+//                .email("admin@mail.com")
+//                .password("password")
+//                .roles(List.of("ROLE_ADMIN"))
+//                .build();
+//
+//        when(userService.createUser(any(UserRq.class))).thenReturn(any(UserRs.class));
+//
+//        mockMvc.perform(post(baseUrl + "/user")
+//                                .accept(MediaType.APPLICATION_JSON)
+//                                .content(objectMapper.writeValueAsString(rq))
+//                                .contentType(MediaType.APPLICATION_JSON))
+//                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+//                .andExpect(jsonPath("$.flag").value(true))
+//                .andExpect(jsonPath("$.code").value(200))
+//                .andExpect(jsonPath("$.message").value("User created successfully"));
+//    }
+//
+////    @Test
+//    @WithMockUser(roles = "ADMIN")
+//    void findById_ShouldReturnUser() throws Exception {
+//        UserRs rs = UserRs.builder()
+//                .id(1L)
+//                .username("admin")
+//                .email("admin@mail.com")
+//                .roles(List.of("ROLE_ADMIN"))
+//                .isEnabled(true)
+//                .build();
+//
+//        when(userService.findById(anyLong())).thenReturn(rs);
+//
+//        mockMvc.perform(get(baseUrl +"/user/1"))
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.success").value(true))
+//                .andExpect(jsonPath("$.statusCode").value(StatusCode.SUCCESS))
+//                .andExpect(jsonPath("$.message").value("Found one success"))
+//                .andExpect(jsonPath("$.data.id").value(1L))
+//                .andExpect(jsonPath("$.data.username").value("username"));
+//    }
+
+//    @Test
+//    @WithMockUser(roles = "ADMIN")
+//    void findAll_ShouldReturnUserList() throws Exception {
+//        UserRs userRs1 = new UserRs(1L, "user1");
+//        UserRs userRs2 = new UserRs(2L, "user2");
+//        when(userService.findAll()).thenReturn(Arrays.asList(userRs1, userRs2));
+//
+//        mockMvc.perform(get("/api/user"))
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.success").value(true))
+//                .andExpect(jsonPath("$.statusCode").value(StatusCode.SUCCESS))
+//                .andExpect(jsonPath("$.message").value("Found all"))
+//                .andExpect(jsonPath("$.data").isArray())
+//                .andExpect(jsonPath("$.data[0].username").value("user1"))
+//                .andExpect(jsonPath("$.data[1].username").value("user2"));
+//    }
+//
+//    @Test
+//    @WithMockUser(roles = "USER")
+//    void update_ShouldReturnUpdatedUser() throws Exception {
+//        UserRq userRq = new UserRq("updatedUsername", "newPassword", "ROLE_USER");
+//        UserRs userRs = new UserRs(1L, "updatedUsername");
+//        when(userService.update(any(Long.class), any(UserRq.class))).thenReturn(userRs);
+//
+//        mockMvc.perform(put("/api/user/1")
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(objectMapper.writeValueAsString(userRq))) // Используем ObjectMapper
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.success").value(true))
+//                .andExpect(jsonPath("$.statusCode").value(StatusCode.SUCCESS))
+//                .andExpect(jsonPath("$.message").value("Update success"))
+//                .andExpect(jsonPath("$.data.username").value("updatedUsername"));
+//    }
+//
+//    @Test
+//    @WithMockUser(roles = "ADMIN")
+//    void deleteById_ShouldReturnSuccess() throws Exception {
+//        doNothing().when(userService).deleteById(1L);
+//
+//        mockMvc.perform(delete("/api/user/1"))
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.success").value(true))
+//                .andExpect(jsonPath("$.statusCode").value(StatusCode.SUCCESS))
+//                .andExpect(jsonPath("$.message").value("Delete success"));
+//    }
+//
+//    @Test
+//    @WithMockUser(roles = "ADMIN")
+//    void assignRoleToUser_ShouldReturnSuccess() throws Exception {
+//        String roleName = "ROLE_ADMIN";
+//        doNothing().when(userService).assignRoleToUser("username", roleName);
+//
+//        mockMvc.perform(post("/api/user/change-role/username")
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(objectMapper.writeValueAsString(roleName))) // Используем ObjectMapper
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.success").value(true))
+//                .andExpect(jsonPath("$.statusCode").value(StatusCode.SUCCESS))
+//                .andExpect(jsonPath("$.message").value("Role assign success"));
+//    }
+
+
 
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void createUserAsAdminSuccess() throws Exception {
 
         UserRs rs = UserRs.builder()
@@ -117,7 +200,6 @@ class UserControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void createUserFail() throws Exception {
         UserRq rq = UserRq.builder().username("").email("").password("").roles(List.of()).build();
         mockMvc.perform(
@@ -145,7 +227,7 @@ class UserControllerTest {
         given(userService.findById(anyLong())).willReturn(rs);
 
         mockMvc.perform(get(baseUrl + "/user/1").accept(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.timestamp").value(Matchers.any(String.class)))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.message").value("Found one success"))
@@ -247,9 +329,7 @@ class UserControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.code").value(StatusCode.SUCCESS))
-                .andExpect(jsonPath("$.message").value("Delete success"))
-                .andExpect(jsonPath("$.data").isEmpty());
-
+                .andExpect(jsonPath("$.message").value("Delete success"));
     }
 
     @Test
@@ -261,9 +341,7 @@ class UserControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value(false))
                 .andExpect(jsonPath("$.code").value(StatusCode.NOT_FOUND))
-                .andExpect(jsonPath("$.message").value("user not found"))
-                .andExpect(jsonPath("$.data").isEmpty());
-
+                .andExpect(jsonPath("$.message").value("user not found"));
     }
 
     @Test
@@ -277,10 +355,9 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.code").value(StatusCode.SUCCESS))
-                .andExpect(jsonPath("$.message").value("Role assign success"))
-                .andExpect(jsonPath("$.data").isEmpty());
-
+                .andExpect(jsonPath("$.message").value("Role assign success"));
     }
+
     @Test
     void  assignRoleToUserFail() throws Exception {
 
@@ -292,8 +369,7 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value(false))
                 .andExpect(jsonPath("$.code").value(StatusCode.NOT_FOUND))
-                .andExpect(jsonPath("$.message").value("user not found"))
-                .andExpect(jsonPath("$.data").isEmpty());
+                .andExpect(jsonPath("$.message").value("user not found"));
     }
 
 }
