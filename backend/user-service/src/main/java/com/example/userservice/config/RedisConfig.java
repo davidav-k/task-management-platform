@@ -1,56 +1,32 @@
 package com.example.userservice.config;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
-import org.springframework.data.redis.core.RedisKeyValueAdapter;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 
-import java.time.Duration;
 
 @Configuration
-@EnableRedisRepositories(enableKeyspaceEvents = RedisKeyValueAdapter.EnableKeyspaceEvents.ON_STARTUP)
+@EnableRedisRepositories
 public class RedisConfig {
+    @Value("${spring.data.redis.host}")
+    private String redisHost;
 
-    @Value("${app.jwt.refreshTokenExpiration}")
-    private Duration refreshTokenExpiration;
+    @Value("${spring.data.redis.port}")
+    private int redisPort;
 
     @Bean
-    public LettuceConnectionFactory redisConnectionFactory(RedisProperties redisProperties) {
-        RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
-        configuration.setHostName(redisProperties.getHost());
-        configuration.setPort(redisProperties.getPort());
-        return new LettuceConnectionFactory(configuration);
+    public RedisConnectionFactory redisConnectionFactory() {
+        return new LettuceConnectionFactory(redisHost, redisPort);
     }
 
-
-//    @Bean
-//    public JedisConnectionFactory jedisConnectionFactory(RedisProperties redisProperties){
-//        RedisStandaloneConfiguration configuration= new RedisStandaloneConfiguration();
-//
-//        configuration.setHostName(redisProperties.getHost());
-//        configuration.setPort(redisProperties.getPort());
-//
-//        return new JedisConnectionFactory(configuration);
-//    }
-//
-//    public class RRefreshTokenKeyspaceConfiguration extends KeyspaceConfiguration{
-//
-//        private static final String REFRESH_TOKEN_KEYSPACE = "refresh_tokens";
-//
-//        @Override
-//        protected @NotNull Iterable<KeyspaceSettings> initialConfiguration() {
-//            KeyspaceSettings keyspaceSettings = new KeyspaceSettings(RefreshToken.class, REFRESH_TOKEN_KEYSPACE);
-//            keyspaceSettings.setTimeToLive(refreshTokenExpiration.getSeconds());
-//
-//            return Collections.singleton(keyspaceSettings);
-//        }
-//    }
-
-
-
-
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+        return template;
+    }
 }

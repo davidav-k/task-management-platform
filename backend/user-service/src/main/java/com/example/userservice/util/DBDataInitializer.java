@@ -16,7 +16,7 @@ import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
-@Profile({"dev-local"})
+@Profile({"dev-local", "test"})
 public class DBDataInitializer implements CommandLineRunner {
 
     private final PasswordEncoder passwordEncoder;

@@ -36,11 +36,14 @@ public class AuthController {
         return new Result(true,StatusCode.SUCCESS, "Refresh token returned", rs);
     }
 
+
     @PostMapping("/logout")
     public Result logout(@AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return new Result(false, StatusCode.UNAUTHORIZED, "Access Denied");
+        }
         authService.logout();
-        return new Result(true,StatusCode.SUCCESS, "User logout. User name is: " + userDetails.getUsername());
+        return new Result(true, StatusCode.SUCCESS, "User logout. User name is: " + userDetails.getUsername());
     }
-
 
 }

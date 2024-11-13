@@ -1,4 +1,5 @@
 # User Service
+This service is performed according to skillbox methodology
 
 This service handles user management, including:
 - User registration
