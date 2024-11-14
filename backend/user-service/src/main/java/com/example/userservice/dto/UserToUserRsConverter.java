@@ -5,23 +5,17 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Component
 public class UserToUserRsConverter implements Converter<User, UserRs> {
 
     @Override
-    public UserRs convert(User user) {
+    public UserRs convert(@NotNull User user) {
 
-        List<String> roles = user.getRoles().stream()
-                .map(role -> role.getName().name())
-                .toList();
         return UserRs.builder()
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
-                .roles(roles)
+                .roles(user.getRoles())
                 .isEnabled(user.isEnabled())
                 .build();
     }

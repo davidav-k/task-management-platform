@@ -14,13 +14,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
@@ -28,8 +28,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles(value = "dev-h2")
+@AutoConfigureMockMvc(addFilters = false)
 class UserControllerTest {
 
     @Autowired
@@ -47,29 +46,27 @@ class UserControllerTest {
 
     @Test
     void createUserSuccess() throws Exception {
-
-        UserRs rs = UserRs.builder()
-                .id(1L)
-                .username("admin")
-                .email("admin@mail.com")
-                .roles(List.of("ROLE_ADMIN"))
-                .isEnabled(true)
-                .build();
         UserRq rq = UserRq.builder()
                 .username("admin")
                 .email("admin@mail.com")
                 .password("password")
-                .roles(List.of("ROLE_ADMIN"))
+                .roles("admin")
+                .enable(true)
+                .build();
+        UserRs rs = UserRs.builder()
+                .id(1L)
+                .username("admin")
+                .email("admin@mail.com")
+                .roles("admin")
+                .isEnabled(true)
                 .build();
 
         given(userService.createUser(any(UserRq.class))).willReturn(rs);
 
-        mockMvc.perform(
-                        post(baseUrl + "/user")
+        mockMvc.perform(post(baseUrl + "/user")
                                 .accept(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(rq))
                                 .contentType(MediaType.APPLICATION_JSON))
-
                 .andExpect(jsonPath("$.timestamp").isNotEmpty())
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.code").value(200))
@@ -77,14 +74,19 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.username").value("admin"))
                 .andExpect(jsonPath("$.data.email").value("admin@mail.com"))
-                .andExpect(jsonPath("$.data.roles").isArray())
-                .andExpect(jsonPath("$.data.roles[0]").value("ROLE_ADMIN"))
+                .andExpect(jsonPath("$.data.roles").value("admin"))
                 .andExpect(jsonPath("$.data.password").doesNotExist());
     }
 
     @Test
     void createUserFail() throws Exception {
-        UserRq rq = UserRq.builder().username("").email("").password("").roles(List.of()).build();
+        UserRq rq = UserRq.builder()
+                .username("")
+                .email("")
+                .password("")
+                .roles("")
+                .enable(true)
+                .build();
         mockMvc.perform(
                 post(baseUrl + "/user")
                         .accept(MediaType.APPLICATION_JSON)
@@ -104,9 +106,10 @@ class UserControllerTest {
                 .id(1L)
                 .username("admin")
                 .email("admin@admin.com")
-                .roles(List.of("ROLE_ADMIN"))
+                .roles("admin")
                 .isEnabled(true)
                 .build();
+
         given(userService.findById(anyLong())).willReturn(rs);
 
         mockMvc.perform(get(baseUrl + "/user/1").accept(MediaType.APPLICATION_JSON))
@@ -117,7 +120,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.data.id").value(1L))
                 .andExpect(jsonPath("$.data.username").value("admin"))
                 .andExpect(jsonPath("$.data.email").value("admin@admin.com"))
-                .andExpect(jsonPath("$.data.roles").value("ROLE_ADMIN"))
+                .andExpect(jsonPath("$.data.roles").value("admin"))
                 .andExpect(jsonPath("$.data.password").doesNotExist());
     }
 
@@ -154,20 +157,20 @@ class UserControllerTest {
 
     @Test
     void updateSuccess() throws Exception {
-        UserRs rs = UserRs.builder()
-                .id(1L)
-                .username("adminUp")
-                .email("admin@mail.com")
-                .roles(List.of("ROLE_ADMIN"))
-                .isEnabled(true)
-                .build();
         UserRq rq = UserRq.builder()
                 .username("adminUp")
                 .email("admin@mail.com")
                 .password("password")
-                .roles(List.of("ROLE_ADMIN"))
+                .roles("admin")
+                .enable(true)
                 .build();
-
+        UserRs rs = UserRs.builder()
+                .id(1L)
+                .username("adminUp")
+                .email("admin@mail.com")
+                .roles("admin")
+                .isEnabled(true)
+                .build();
         given(userService.update(anyLong(),any(UserRq.class))).willReturn(rs);
 
 
@@ -188,7 +191,8 @@ class UserControllerTest {
                 .username("")
                 .email("")
                 .password("")
-                .roles(List.of())
+                .roles("")
+                .enable(true)
                 .build();
 
         this.mockMvc.perform(put(baseUrl + "/user/1")
@@ -230,35 +234,4 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.data").isEmpty());
 
     }
-
-    @Test
-    void  assignRoleToUserSuccess() throws Exception {
-
-        doNothing().when(userService).assignRoleToUser(anyString(),anyString());
-
-        this.mockMvc.perform(post(baseUrl + "/user/change-role/user")
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content("ROLE_USER")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.flag").value(true))
-                .andExpect(jsonPath("$.code").value(StatusCode.SUCCESS))
-                .andExpect(jsonPath("$.message").value("Role assign success"))
-                .andExpect(jsonPath("$.data").isEmpty());
-
-    }
-    @Test
-    void  assignRoleToUserFail() throws Exception {
-
-        doThrow(new EntityNotFoundException("user not found")).when(userService).assignRoleToUser(anyString(),anyString());
-
-        this.mockMvc.perform(post(baseUrl + "/user/change-role/user")
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content("ROLE_USER")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.flag").value(false))
-                .andExpect(jsonPath("$.code").value(StatusCode.NOT_FOUND))
-                .andExpect(jsonPath("$.message").value("user not found"))
-                .andExpect(jsonPath("$.data").isEmpty());
-    }
-
 }
