@@ -7,6 +7,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
@@ -24,17 +25,19 @@ public class ExceptionHandlerAdvice {
 
     @ExceptionHandler(EntityNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    Result handleEntityNotFoundException(EntityNotFoundException ex) {
+    Result handleEntityNotFoundException(@NotNull EntityNotFoundException ex) {
         return new Result(false, StatusCode.NOT_FOUND, ex.getMessage());
     }
 
-    @ExceptionHandler(UserNotFoundException.class)
-    Result handleUserNotFound(UserNotFoundException ex) {
-        return new Result(false, StatusCode.NOT_FOUND, "user not found", ex.getMessage());
+    @ExceptionHandler({UserNotFoundException.class, BadCredentialsException.class})
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    Result handleUserNotFound(@NotNull UserNotFoundException ex) {
+        return new Result(false, StatusCode.UNAUTHORIZED, "username or password is incorrect", ex.getMessage());
     }
 
     @ExceptionHandler({UsernameAlreadyTakenException.class, EmailAlreadyInUseException.class})
-    Result handleValidationExceptions(RuntimeException ex) {
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    Result handleUsernameOrEmailExceptions(@NotNull RuntimeException ex) {
         return new Result(false, StatusCode.INVALID_ARGUMENT, "username or password is incorrect", ex.getMessage());
     }
 
@@ -70,11 +73,6 @@ public class ExceptionHandlerAdvice {
         return new Result(false, StatusCode.INVALID_ARGUMENT, "Provided arguments are not valid", map);
     }
 
-//    @ExceptionHandler({UsernameNotFoundException.class, BadCredentialsException.class,  })
-//    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-//    Result handleAuthenticationException(@NotNull Exception ex) {
-//        return new Result(false, StatusCode.UNAUTHORIZED, "username or password is incorrect", ex.getMessage());
-//    }
 //
 //    @ExceptionHandler(AccountStatusException.class)
 //    @ResponseStatus(HttpStatus.UNAUTHORIZED)
@@ -113,11 +111,4 @@ public class ExceptionHandlerAdvice {
         System.out.println(ex.getClass().getName());
         return new Result(false, StatusCode.INTERNAL_SERVER_ERROR, "Server internal error", ex.getMessage());
     }
-
-
-
-//    ServletException
-//    DataIntegrityViolationException
-//    ConstraintDefinitionException
-//    IllegalArgumentException
 }

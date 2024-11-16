@@ -51,7 +51,7 @@ class UserControllerTest {
                 .email("admin@mail.com")
                 .password("password")
                 .roles("admin")
-                .enable(true)
+                .enabled(true)
                 .build();
         UserRs rs = UserRs.builder()
                 .id(1L)
@@ -85,7 +85,7 @@ class UserControllerTest {
                 .email("")
                 .password("")
                 .roles("")
-                .enable(true)
+                .enabled(true)
                 .build();
         mockMvc.perform(
                 post(baseUrl + "/user")
@@ -162,7 +162,7 @@ class UserControllerTest {
                 .email("admin@mail.com")
                 .password("password")
                 .roles("admin")
-                .enable(true)
+                .enabled(true)
                 .build();
         UserRs rs = UserRs.builder()
                 .id(1L)
@@ -192,7 +192,7 @@ class UserControllerTest {
                 .email("")
                 .password("")
                 .roles("")
-                .enable(true)
+                .enabled(true)
                 .build();
 
         this.mockMvc.perform(put(baseUrl + "/user/1")

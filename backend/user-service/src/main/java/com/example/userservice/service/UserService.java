@@ -9,9 +9,13 @@ import com.example.userservice.exception.EmailAlreadyInUseException;
 import com.example.userservice.exception.UserNotFoundException;
 import com.example.userservice.exception.UsernameAlreadyTakenException;
 import com.example.userservice.repo.UserRepository;
+import com.example.userservice.security.AppUserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.stereotype.Service;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype .Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -19,7 +23,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class UserService {
+public class UserService implements UserDetailsService {
 
     private final UserRqToUserConverter userRqToUserConverter;
     private final UserToUserRsConverter userToUserRsConverter;
@@ -99,6 +103,14 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         userRepository.delete(user);
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+
+        return userRepository.findByUsername(username)
+                .map(AppUserPrincipal::new)
+                .orElseThrow(() -> new UserNotFoundException("User " + username + " not found"));
     }
 }
 

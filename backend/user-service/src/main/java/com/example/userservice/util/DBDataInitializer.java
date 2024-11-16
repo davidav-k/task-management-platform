@@ -1,7 +1,7 @@
 package com.example.userservice.util;
 
-import com.example.userservice.entity.User;
-import com.example.userservice.repo.UserRepository;
+import com.example.userservice.dto.UserRq;
+import com.example.userservice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
@@ -14,26 +14,26 @@ import org.springframework.transaction.annotation.Transactional;
 public class DBDataInitializer implements CommandLineRunner {
 
 
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     @Override
     @Transactional
     public void run(String... args) {
-        User admin = User.builder()
+        UserRq adminRq = UserRq.builder()
                 .username("admin")
                 .password("password")
                 .email("admin@mail.com")
                 .roles("admin")
                 .enabled(true)
                 .build();
-        User user = User.builder()
+        UserRq userRq = UserRq.builder()
                 .username("user")
                 .password("password")
                 .email("user@mail.com")
                 .roles("user")
                 .enabled(true)
                 .build();
-        userRepository.save(admin);
-        userRepository.save(user);
+        userService.createUser(adminRq);
+        userService.createUser(userRq);
     }
 }

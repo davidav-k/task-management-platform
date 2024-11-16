@@ -56,7 +56,7 @@ class UserServiceTest {
                 .email("admin@mail.com")
                 .password("password")
                 .roles("admin")
-                .enable(true)
+                .enabled(true)
                 .build();
         UserRs rs = UserRs.builder()
                 .id(1L)
@@ -115,7 +115,7 @@ class UserServiceTest {
                 .username("admin")
                 .email("admin@admin.com")
                 .password("password")
-                .enable(true)
+                .enabled(true)
                 .roles("admin")
                 .build();
         given(userRepository.existsByUsername(anyString())).willReturn(false);
@@ -238,7 +238,7 @@ class UserServiceTest {
                 .email("adminUp@mail.com")
                 .password("password")
                 .roles("admin")
-                .enable(true)
+                .enabled(true)
                 .build();
         UserRs rs = UserRs.builder()
                 .id(1L)

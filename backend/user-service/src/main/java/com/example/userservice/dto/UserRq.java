@@ -21,5 +21,5 @@ public  class UserRq{
 
         String roles;
 
-        boolean enable;
+        boolean enabled;
 }
