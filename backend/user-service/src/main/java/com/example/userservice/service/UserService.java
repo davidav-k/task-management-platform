@@ -6,15 +6,22 @@ import com.example.userservice.dto.UserRs;
 import com.example.userservice.dto.UserToUserRsConverter;
 import com.example.userservice.entity.User;
 import com.example.userservice.exception.EmailAlreadyInUseException;
+import com.example.userservice.exception.PasswordChangeIllegalArgumentException;
 import com.example.userservice.exception.UserNotFoundException;
 import com.example.userservice.exception.UsernameAlreadyTakenException;
 import com.example.userservice.repo.UserRepository;
 import com.example.userservice.security.AppUserPrincipal;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.helpers.MessageFormatter;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype .Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +35,7 @@ public class UserService implements UserDetailsService {
     private final UserRqToUserConverter userRqToUserConverter;
     private final UserToUserRsConverter userToUserRsConverter;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public List<UserRs> findAll() {
         List<User> users = userRepository.findAll();
@@ -36,7 +44,7 @@ public class UserService implements UserDetailsService {
 
     public UserRs findById(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
         return userToUserRsConverter.convert(user);
     }
 
@@ -77,10 +85,18 @@ public class UserService implements UserDetailsService {
 
         validateUsernameAndEmailForUpdate(existingUser, updateUser);
 
-        existingUser.setUsername(updateUser.getUsername());
-        existingUser.setEmail(updateUser.getEmail());
-        existingUser.setEnabled(updateUser.isEnabled());
-        existingUser.setRoles(updateUser.getRoles());
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication.getAuthorities()
+                .stream()
+                .noneMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_admin"))) {
+            existingUser.setUsername(updateUser.getUsername());
+        }else {
+            existingUser.setUsername(updateUser.getUsername());
+            existingUser.setEmail(updateUser.getEmail());
+            existingUser.setEnabled(updateUser.isEnabled());
+            existingUser.setRoles(updateUser.getRoles());
+        }
 
         User savedUser = userRepository.save(existingUser);
         return userToUserRsConverter.convert(savedUser);
@@ -89,20 +105,44 @@ public class UserService implements UserDetailsService {
     private void validateUsernameAndEmailForUpdate(@NotNull User existingUser, @NotNull User updateUser) {
         if (!existingUser.getUsername().equals(updateUser.getUsername()) &&
                 userRepository.existsByUsername(updateUser.getUsername())) {
-            throw new IllegalArgumentException("Username is already taken");
+            throw new UsernameAlreadyTakenException("Username is already taken");
         }
         if (!existingUser.getEmail().equals(updateUser.getEmail()) &&
                 userRepository.findByEmail(updateUser.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("Email is already in use");
+            throw new EmailAlreadyInUseException("Email is already in use");
         }
     }
 
     @Transactional
     public void deleteById(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         userRepository.delete(user);
+    }
+
+    public void changePassword(Long userId, String oldPassword, String newPassword, String confirmNewPassword) {
+
+        User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException(
+                MessageFormatter.format("User with id {} not found", userId).getMessage()));
+
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new BadCredentialsException("Old password is incorrect");
+        }
+
+        if (!newPassword.equals(confirmNewPassword)) {
+            throw new PasswordChangeIllegalArgumentException("New password and confirm new password do not match");
+        }
+
+        //The new password must contain at least one digit, one lowercase letter, one uppercase letter, and be at least 8 characters long.
+        String passwordPolicy = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}$";
+        if (!newPassword.matches(passwordPolicy)) {
+            throw new PasswordChangeIllegalArgumentException("New password does not conform to password policy");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+
+        userRepository.save(user);
     }
 
     @Override
@@ -112,6 +152,7 @@ public class UserService implements UserDetailsService {
                 .map(AppUserPrincipal::new)
                 .orElseThrow(() -> new UserNotFoundException("User " + username + " not found"));
     }
+
 }
 
 

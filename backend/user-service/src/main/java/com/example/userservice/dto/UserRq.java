@@ -1,25 +1,29 @@
 package com.example.userservice.dto;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 
 @Builder
 @Data
-public  class UserRq{
+public class UserRq {
 
-        @Size(min = 3, max = 20, message = "Username must be between 3 and 20 characters")
-        String username;
+    @Size(min = 3, max = 20, message = "Username must be between 3 and 20 characters")
+    private String username;
 
-        @Email(message = "The email address must be in the format user@example.com")
-        String email;
+    @Email(message = "The email address must be in the format user@example.com")
+    private String email;
 
-        // TODO police
-        @Size(min = 8, max = 255, message = "The password length must be from 8 no more than 255 characters.")
-        String password;
+    @Pattern(
+            regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}$",
+            message = "Password must contain at least one digit, one lowercase letter, one uppercase letter, and be at least 8 characters long")
+    private String password;
 
-        String roles;
+    @NotEmpty(message = "Roles must be not empty")
+    private String roles;
 
-        boolean enabled;
+    private boolean enabled;
 }

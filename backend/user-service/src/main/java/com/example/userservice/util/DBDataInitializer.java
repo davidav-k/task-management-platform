@@ -21,19 +21,27 @@ public class DBDataInitializer implements CommandLineRunner {
     public void run(String... args) {
         UserRq adminRq = UserRq.builder()
                 .username("admin")
-                .password("password")
+                .password("Password123")
                 .email("admin@mail.com")
                 .roles("admin")
                 .enabled(true)
                 .build();
-        UserRq userRq = UserRq.builder()
-                .username("user")
-                .password("password")
-                .email("user@mail.com")
+        UserRq user1Rq = UserRq.builder()
+                .username("user1")
+                .password("Password123")
+                .email("user1@mail.com")
+                .roles("user")
+                .enabled(true)
+                .build();
+        UserRq user2Rq = UserRq.builder()
+                .username("user2")
+                .password("Password123")
+                .email("user2@mail.com")
                 .roles("user")
                 .enabled(true)
                 .build();
         userService.createUser(adminRq);
-        userService.createUser(userRq);
+        userService.createUser(user1Rq);
+        userService.createUser(user2Rq);
     }
 }

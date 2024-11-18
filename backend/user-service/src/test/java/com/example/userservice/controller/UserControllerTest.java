@@ -49,7 +49,7 @@ class UserControllerTest {
         UserRq rq = UserRq.builder()
                 .username("admin")
                 .email("admin@mail.com")
-                .password("password")
+                .password("Password123")
                 .roles("admin")
                 .enabled(true)
                 .build();
@@ -96,7 +96,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.flag").value(false))
                 .andExpect(jsonPath("$.code").value(400))
                 .andExpect(jsonPath("$.message").value("Provided arguments are not valid"))
-                .andExpect(jsonPath("$.data.password").value("The password length must be from 8 no more than 255 characters."))
+                .andExpect(jsonPath("$.data.password").value("Password must contain at least one digit, one lowercase letter, one uppercase letter, and be at least 8 characters long"))
                 .andExpect(jsonPath("$.data.username").value("Username must be between 3 and 20 characters"));
     }
 
@@ -160,7 +160,7 @@ class UserControllerTest {
         UserRq rq = UserRq.builder()
                 .username("adminUp")
                 .email("admin@mail.com")
-                .password("password")
+                .password("Password123")
                 .roles("admin")
                 .enabled(true)
                 .build();
@@ -203,7 +203,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.flag").value(false))
                 .andExpect(jsonPath("$.code").value(400))
                 .andExpect(jsonPath("$.message").value("Provided arguments are not valid"))
-                .andExpect(jsonPath("$.data.password").value("The password length must be from 8 no more than 255 characters."))
+                .andExpect(jsonPath("$.data.password").value("Password must contain at least one digit, one lowercase letter, one uppercase letter, and be at least 8 characters long"))
                 .andExpect(jsonPath("$.data.username").value("Username must be between 3 and 20 characters"));
     }
 

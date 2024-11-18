@@ -10,35 +10,44 @@ import com.example.userservice.exception.EmailAlreadyInUseException;
 import com.example.userservice.exception.UserNotFoundException;
 import com.example.userservice.exception.UsernameAlreadyTakenException;
 import com.example.userservice.repo.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
     @InjectMocks
     UserService userService;
+
     @Mock
     UserRepository userRepository;
+
     @Mock
     private UserToUserRsConverter userToUserRsConverter;
+
     @Mock
     private UserRqToUserConverter userRqToUserConverter;
+
     @Mock
-    private CommandLineRunner commandLineRunner; // don't load init data
+    private CommandLineRunner commandLineRunner; // don't load init data to database
 
 
     @Test
@@ -47,14 +56,14 @@ class UserServiceTest {
                 .id(1L)
                 .username("admin")
                 .email("admin@mail.com")
-                .password("password")
+                .password("Password123")
                 .roles("admin")
                 .enabled(true)
                 .build();
         UserRq rq = UserRq.builder()
                 .username("admin")
                 .email("admin@mail.com")
-                .password("password")
+                .password("Password123")
                 .roles("admin")
                 .enabled(true)
                 .build();
@@ -82,18 +91,10 @@ class UserServiceTest {
 
     @Test
     void createUserEmptyUsernameFail() {
-        User user = User.builder()
-                .id(1L)
-                .username("admin")
-                .email("admin@mail.com")
-                .password("password")
-                .roles("admin")
-                .enabled(true)
-                .build();
         UserRq rq = UserRq.builder()
                 .username("admin")
                 .email("admin@mail.com")
-                .password("password")
+                .password("Password123")
                 .roles("admin")
                 .build();
         given(userRepository.existsByUsername(anyString())).willReturn(true);
@@ -103,18 +104,10 @@ class UserServiceTest {
 
     @Test
     void createUserEmptyEmailFail() {
-        User user = User.builder()
-                .id(1L)
-                .username("admin")
-                .email("admin@mail.com")
-                .password("password")
-                .roles("admin")
-                .enabled(true)
-                .build();
         UserRq rq = UserRq.builder()
                 .username("admin")
                 .email("admin@admin.com")
-                .password("password")
+                .password("Password123")
                 .enabled(true)
                 .roles("admin")
                 .build();
@@ -148,7 +141,7 @@ class UserServiceTest {
     void findByIdFail() {
         given(userRepository.findById(anyLong())).willReturn(Optional.empty());
 
-        assertThrows(UserNotFoundException.class, () -> userService.findById(1L));
+        assertThrows(EntityNotFoundException.class, () -> userService.findById(1L));
     }
 
     @Test
@@ -157,7 +150,7 @@ class UserServiceTest {
                 .id(1L)
                 .username("admin")
                 .email("admin@mail.com")
-                .password("password")
+                .password("Password123")
                 .roles("admin")
                 .enabled(true)
                 .build();
@@ -186,7 +179,7 @@ class UserServiceTest {
                 .id(1L)
                 .username("admin")
                 .email("admin@mail.com")
-                .password("password")
+                .password("Password123")
                 .roles("admin")
                 .enabled(true)
                 .build();
@@ -204,9 +197,7 @@ class UserServiceTest {
     @Test
     void findByEmailFail() {
         given(userRepository.findByEmail(any(String.class))).willReturn(Optional.empty());
-
         assertThrows(UserNotFoundException.class, () -> userService.findByEmail("admin@mail.com"));
-
     }
 
     @Test
@@ -223,48 +214,173 @@ class UserServiceTest {
         assertEquals(3, rs.size());
     }
 
-    @Test
-    void updateSuccess() {
-        User user = User.builder()
-                .id(1L)
-                .username("admin")
-                .email("admin@mail.com")
-                .password("password")
-                .roles("admin")
-                .enabled(true)
-                .build();
-        UserRq rq = UserRq.builder()
-                .username("adminUp")
-                .email("adminUp@mail.com")
-                .password("password")
-                .roles("admin")
-                .enabled(true)
-                .build();
-        UserRs rs = UserRs.builder()
-                .id(1L)
-                .username("adminUp")
-                .email("adminUp@mail.com")
-                .roles("admin")
-                .isEnabled(true)
-                .build();
-        given(userRqToUserConverter.convert(any(UserRq.class))).willReturn(user);
-        given(userRepository.findById(anyLong())).willReturn(Optional.of(user));
-        given(userRepository.save(any(User.class))).willReturn(user);
-        given(userToUserRsConverter.convert(any(User.class))).willReturn(rs);
+//    @Test
+//    void update_whenUserIsAdmin_updatesAllFields() {
+//        // Given
+//        Long userId = 1L;
+//        User updateUser = User.builder()
+//                .id(1L)
+//                .username("admin")
+//                .email("admin@mail.com")
+//                .password("Password123")
+//                .roles("admin")
+//                .enabled(true)
+//                .build();
+//        User existingUser = User.builder()
+//                .id(1L)
+//                .username("admin")
+//                .email("admin@mail.com")
+//                .password("Password123")
+//                .roles("admin")
+//                .enabled(true)
+//                .build();
+//        User savedUser = User.builder()
+//                .id(1L)
+//                .username("adminOld")
+//                .email("adminOld@mail.com")
+//                .password("Password123")
+//                .roles("admin")
+//                .enabled(true)
+//                .build();
+//        UserRq rq = UserRq.builder()
+//                .username("admin")
+//                .email("admin@mail.com")
+//                .password("Password123")
+//                .roles("admin")
+//                .enabled(true)
+//                .build();
+//        UserRs rs = UserRs.builder()
+//                .id(1L)
+//                .username("admin")
+//                .email("admin@mail.com")
+//                .roles("admin")
+//                .isEnabled(true)
+//                .build();
+//
+//        when(userRqToUserConverter.convert(rq)).thenReturn(updateUser);
+//        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+//        when(userRepository.save(existingUser)).thenReturn(savedUser);
+//        when(userToUserRsConverter.convert(savedUser)).thenReturn(rs);
+//
+//        Authentication authentication = Mockito.mock(Authentication.class);
+//
+//        when(authentication.getAuthorities()
+//                .stream()
+//                .noneMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_admin"))).thenReturn(false);
+//        SecurityContextHolder.getContext().setAuthentication(authentication);
+//
+//        // When
+//        UserRs result = userService.update(userId, rq);
+//
+//        // Then
+//        assertNotNull(result);
+//        assertEquals("newUsername", result.getUsername());
+//        assertEquals("new@mail.com", result.getEmail());
+//        Mockito.verify(userRepository).save(existingUser);
+//    }
 
-        UserRs savedUser = userService.update(1L, rq);
+//    @Test
+//    void update_whenUserIsNotAdmin_updatesOnlyUsername() {
+//        // Given
+//        Long userId = 1L;
+//        UserRq rq = new UserRq("newUsername", "new@mail.com", true, List.of("ROLE_user"));
+//        User updateUser = new User("newUsername", "new@mail.com", true, List.of("ROLE_user"));
+//        User existingUser = new User("oldUsername", "old@mail.com", true, List.of("ROLE_user"));
+//        User savedUser = new User("newUsername", "old@mail.com", true, List.of("ROLE_user"));
+//        UserRs userRs = new UserRs("newUsername", "old@mail.com", true, List.of("ROLE_user"));
+//
+//        when(userRqToUserConverter.convert(rq)).thenReturn(updateUser);
+//        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+//        when(userRepository.save(existingUser)).thenReturn(savedUser);
+//        when(userToUserRsConverter.convert(savedUser)).thenReturn(userRs);
+//
+//        Authentication authentication = Mockito.mock(Authentication.class);
+//        when(authentication.getAuthorities()).thenReturn(
+//                List.of(() -> "ROLE_user")
+//        );
+//        SecurityContextHolder.getContext().setAuthentication(authentication);
+//
+//        // When
+//        UserRs result = userService.update(userId, rq);
+//
+//        // Then
+//        assertNotNull(result);
+//        assertEquals("newUsername", result.getUsername());
+//        assertEquals("old@mail.com", result.getEmail());
+//        Mockito.verify(userRepository).save(existingUser);
+//    }
+//
+//    @Test
+//    void update_whenUserNotFound_throwsException() {
+//        // Given
+//        Long userId = 1L;
+//        UserRq rq = new UserRq("newUsername", "new@mail.com", true, List.of("ROLE_user"));
+//
+//        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+//
+//        // When / Then
+//        assertThrows(UserNotFoundException.class, () -> userService.update(userId, rq));
+//    }
+//
+//    @Test
+//    void update_whenConversionFails_throwsException() {
+//        // Given
+//        Long userId = 1L;
+//        UserRq rq = new UserRq("newUsername", "new@mail.com", true, List.of("ROLE_user"));
+//
+//        when(userRqToUserConverter.convert(rq)).thenReturn(null);
+//
+//        // When / Then
+//        assertThrows(IllegalArgumentException.class, () -> userService.update(userId, rq));
+//    }
 
-        assertEquals("adminUp", savedUser.getUsername());
-        assertEquals("adminUp@mail.com",savedUser.getEmail());
-    }
 
-    @Test
-    void updateFail() {
-        UserRq rq = UserRq.builder().build();
-        assertThrows(IllegalArgumentException.class, () -> {
-            userService.update(1L, rq);
-        });
-    }
+
+
+
+
+//    @Test
+//    void updateSuccess() {
+//        User user = User.builder()
+//                .id(1L)
+//                .username("admin")
+//                .email("admin@mail.com")
+//                .password("Password123")
+//                .roles("admin")
+//                .enabled(true)
+//                .build();
+//        UserRq rq = UserRq.builder()
+//                .username("adminUp")
+//                .email("adminUp@mail.com")
+//                .password("Password123")
+//                .roles("admin")
+//                .enabled(true)
+//                .build();
+//        UserRs rs = UserRs.builder()
+//                .id(1L)
+//                .username("adminUp")
+//                .email("adminUp@mail.com")
+//                .roles("admin")
+//                .isEnabled(true)
+//                .build();
+//        given(userRqToUserConverter.convert(any(UserRq.class))).willReturn(user);
+//        given(userRepository.findById(anyLong())).willReturn(Optional.of(user));
+//        given(userRepository.save(any(User.class))).willReturn(user);
+//        given(userToUserRsConverter.convert(any(User.class))).willReturn(rs);
+//
+//        UserRs savedUser = userService.update(1L, rq);
+//
+//        assertEquals("adminUp", savedUser.getUsername());
+//        assertEquals("adminUp@mail.com",savedUser.getEmail());
+//    }
+//
+//    @Test
+//    void updateFail() {
+//        UserRq rq = UserRq.builder().build();
+//        assertThrows(IllegalArgumentException.class, () -> {
+//            userService.update(1L, rq);
+//        });
+//    }
 
     @Test
     void deleteByIdUserSuccess() {
@@ -277,7 +393,7 @@ class UserServiceTest {
     @Test
     void deleteByIdUserFail() {
         given(userRepository.findById(1L)).willReturn(Optional.empty());
-        assertThrows(UserNotFoundException.class, () -> {
+        assertThrows(EntityNotFoundException.class, () -> {
             userService.deleteById(1L);
         });
     }

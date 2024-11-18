@@ -43,16 +43,18 @@ public class SecurityConfig {
     private final CustomBasicAuthenticationEntryPoint customBasicAuthenticationEntryPoint;
     private final CustomBearerTokenAuthenticationEntryPoint customBearerTokenAuthenticationEntryPoint;
     private final CustomBearerTokenAccessDeniedHandler customBearerTokenAccessDeniedHandler;
+    private final UserRequestAuthorizationManager userRequestAuthorizationManager;
 
     @Value("${api.endpoint.base-url}")
     String baseUrl;
 
     public SecurityConfig(CustomBasicAuthenticationEntryPoint customBasicAuthenticationEntryPoint,
                           CustomBearerTokenAuthenticationEntryPoint customBearerTokenAuthenticationEntryPoint,
-                          CustomBearerTokenAccessDeniedHandler customBearerTokenAccessDeniedHandler) throws NoSuchAlgorithmException {
+                          CustomBearerTokenAccessDeniedHandler customBearerTokenAccessDeniedHandler, UserRequestAuthorizationManager userRequestAuthorizationManager) throws NoSuchAlgorithmException {
         this.customBasicAuthenticationEntryPoint = customBasicAuthenticationEntryPoint;
         this.customBearerTokenAuthenticationEntryPoint = customBearerTokenAuthenticationEntryPoint;
         this.customBearerTokenAccessDeniedHandler = customBearerTokenAccessDeniedHandler;
+        this.userRequestAuthorizationManager = userRequestAuthorizationManager;
 
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
         keyPairGenerator.initialize(2048);
@@ -66,9 +68,10 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
-                        .requestMatchers(HttpMethod.GET, this.baseUrl + "/user/**").hasAuthority("ROLE_admin")
+                        .requestMatchers(HttpMethod.GET, this.baseUrl + "/user").hasAuthority("ROLE_admin")
+                        .requestMatchers(HttpMethod.GET, this.baseUrl + "/user/**").access(userRequestAuthorizationManager)
                         .requestMatchers(HttpMethod.POST, this.baseUrl + "/user").hasAuthority("ROLE_admin")
-                        .requestMatchers(HttpMethod.PUT, this.baseUrl + "/user/**").hasAuthority("ROLE_admin")
+                        .requestMatchers(HttpMethod.PUT, this.baseUrl + "/user/**").access(userRequestAuthorizationManager)
                         .requestMatchers(HttpMethod.DELETE, this.baseUrl + "/user/**").hasAuthority("ROLE_admin")
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll()
                         .anyRequest().authenticated()
