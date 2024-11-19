@@ -1,9 +1,6 @@
 package com.example.userservice.service;
 
-import com.example.userservice.dto.UserRq;
-import com.example.userservice.dto.UserRqToUserConverter;
-import com.example.userservice.dto.UserRs;
-import com.example.userservice.dto.UserToUserRsConverter;
+import com.example.userservice.dto.*;
 import com.example.userservice.entity.User;
 import com.example.userservice.exception.EmailAlreadyInUseException;
 import com.example.userservice.exception.PasswordChangeIllegalArgumentException;
@@ -121,27 +118,20 @@ public class UserService implements UserDetailsService {
         userRepository.delete(user);
     }
 
-    public void changePassword(Long userId, String oldPassword, String newPassword, String confirmNewPassword) {
+    public void changePassword(Long userId, @NotNull PasswordRq rq) {
 
         User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException(
                 MessageFormatter.format("User with id {} not found", userId).getMessage()));
 
-        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+        if (!passwordEncoder.matches(rq.getOldPassword(), user.getPassword())) {
             throw new BadCredentialsException("Old password is incorrect");
         }
 
-        if (!newPassword.equals(confirmNewPassword)) {
+        if (!rq.getNewPassword().equals(rq.getConfirmNewPassword())) {
             throw new PasswordChangeIllegalArgumentException("New password and confirm new password do not match");
         }
 
-        //The new password must contain at least one digit, one lowercase letter, one uppercase letter, and be at least 8 characters long.
-        String passwordPolicy = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}$";
-        if (!newPassword.matches(passwordPolicy)) {
-            throw new PasswordChangeIllegalArgumentException("New password does not conform to password policy");
-        }
-
-        user.setPassword(passwordEncoder.encode(newPassword));
-
+        user.setPassword(passwordEncoder.encode(rq.getNewPassword()));
         userRepository.save(user);
     }
 

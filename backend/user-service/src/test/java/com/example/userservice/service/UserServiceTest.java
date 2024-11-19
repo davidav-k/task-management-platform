@@ -1,12 +1,10 @@
 package com.example.userservice.service;
 
 
-import com.example.userservice.dto.UserRq;
-import com.example.userservice.dto.UserRqToUserConverter;
-import com.example.userservice.dto.UserRs;
-import com.example.userservice.dto.UserToUserRsConverter;
+import com.example.userservice.dto.*;
 import com.example.userservice.entity.User;
 import com.example.userservice.exception.EmailAlreadyInUseException;
+import com.example.userservice.exception.PasswordChangeIllegalArgumentException;
 import com.example.userservice.exception.UserNotFoundException;
 import com.example.userservice.exception.UsernameAlreadyTakenException;
 import com.example.userservice.repo.UserRepository;
@@ -18,12 +16,13 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,6 +44,12 @@ class UserServiceTest {
 
     @Mock
     private UserRqToUserConverter userRqToUserConverter;
+
+    @Mock
+    Authentication authentication;
+
+    @Mock
+    PasswordEncoder passwordEncoder;
 
     @Mock
     private CommandLineRunner commandLineRunner; // don't load init data to database
@@ -214,179 +219,171 @@ class UserServiceTest {
         assertEquals(3, rs.size());
     }
 
-//    @Test
-//    void update_whenUserIsAdmin_updatesAllFields() {
-//        // Given
-//        Long userId = 1L;
-//        User updateUser = User.builder()
-//                .id(1L)
-//                .username("admin")
-//                .email("admin@mail.com")
-//                .password("Password123")
-//                .roles("admin")
-//                .enabled(true)
-//                .build();
-//        User existingUser = User.builder()
-//                .id(1L)
-//                .username("admin")
-//                .email("admin@mail.com")
-//                .password("Password123")
-//                .roles("admin")
-//                .enabled(true)
-//                .build();
-//        User savedUser = User.builder()
-//                .id(1L)
-//                .username("adminOld")
-//                .email("adminOld@mail.com")
-//                .password("Password123")
-//                .roles("admin")
-//                .enabled(true)
-//                .build();
-//        UserRq rq = UserRq.builder()
-//                .username("admin")
-//                .email("admin@mail.com")
-//                .password("Password123")
-//                .roles("admin")
-//                .enabled(true)
-//                .build();
-//        UserRs rs = UserRs.builder()
-//                .id(1L)
-//                .username("admin")
-//                .email("admin@mail.com")
-//                .roles("admin")
-//                .isEnabled(true)
-//                .build();
-//
-//        when(userRqToUserConverter.convert(rq)).thenReturn(updateUser);
-//        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
-//        when(userRepository.save(existingUser)).thenReturn(savedUser);
-//        when(userToUserRsConverter.convert(savedUser)).thenReturn(rs);
-//
-//        Authentication authentication = Mockito.mock(Authentication.class);
-//
-//        when(authentication.getAuthorities()
-//                .stream()
-//                .noneMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_admin"))).thenReturn(false);
-//        SecurityContextHolder.getContext().setAuthentication(authentication);
-//
-//        // When
-//        UserRs result = userService.update(userId, rq);
-//
-//        // Then
-//        assertNotNull(result);
-//        assertEquals("newUsername", result.getUsername());
-//        assertEquals("new@mail.com", result.getEmail());
-//        Mockito.verify(userRepository).save(existingUser);
-//    }
+    @Test
+    void updateUserAdminAllFieldsSuccess() {
+        Long userId = 1L;
+        User updateUser = User.builder()
+                .id(1L)
+                .username("admin")
+                .email("admin@mail.com")
+                .password("Password123")
+                .roles("admin")
+                .enabled(true)
+                .build();
+        User existingUser = User.builder()
+                .id(1L)
+                .username("admin")
+                .email("admin@mail.com")
+                .password("Password123")
+                .roles("admin")
+                .enabled(true)
+                .build();
+        User savedUser = User.builder()
+                .id(1L)
+                .username("adminOld")
+                .email("adminOld@mail.com")
+                .password("Password123")
+                .roles("admin")
+                .enabled(true)
+                .build();
+        UserRq rq = UserRq.builder()
+                .username("admin")
+                .email("admin@mail.com")
+                .password("Password123")
+                .roles("admin")
+                .enabled(true)
+                .build();
+        UserRs rs = UserRs.builder()
+                .id(1L)
+                .username("admin")
+                .email("admin@mail.com")
+                .roles("admin")
+                .isEnabled(true)
+                .build();
 
-//    @Test
-//    void update_whenUserIsNotAdmin_updatesOnlyUsername() {
-//        // Given
-//        Long userId = 1L;
-//        UserRq rq = new UserRq("newUsername", "new@mail.com", true, List.of("ROLE_user"));
-//        User updateUser = new User("newUsername", "new@mail.com", true, List.of("ROLE_user"));
-//        User existingUser = new User("oldUsername", "old@mail.com", true, List.of("ROLE_user"));
-//        User savedUser = new User("newUsername", "old@mail.com", true, List.of("ROLE_user"));
-//        UserRs userRs = new UserRs("newUsername", "old@mail.com", true, List.of("ROLE_user"));
-//
-//        when(userRqToUserConverter.convert(rq)).thenReturn(updateUser);
-//        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
-//        when(userRepository.save(existingUser)).thenReturn(savedUser);
-//        when(userToUserRsConverter.convert(savedUser)).thenReturn(userRs);
-//
-//        Authentication authentication = Mockito.mock(Authentication.class);
-//        when(authentication.getAuthorities()).thenReturn(
-//                List.of(() -> "ROLE_user")
-//        );
-//        SecurityContextHolder.getContext().setAuthentication(authentication);
-//
-//        // When
-//        UserRs result = userService.update(userId, rq);
-//
-//        // Then
-//        assertNotNull(result);
-//        assertEquals("newUsername", result.getUsername());
-//        assertEquals("old@mail.com", result.getEmail());
-//        Mockito.verify(userRepository).save(existingUser);
-//    }
-//
-//    @Test
-//    void update_whenUserNotFound_throwsException() {
-//        // Given
-//        Long userId = 1L;
-//        UserRq rq = new UserRq("newUsername", "new@mail.com", true, List.of("ROLE_user"));
-//
-//        when(userRepository.findById(userId)).thenReturn(Optional.empty());
-//
-//        // When / Then
-//        assertThrows(UserNotFoundException.class, () -> userService.update(userId, rq));
-//    }
-//
-//    @Test
-//    void update_whenConversionFails_throwsException() {
-//        // Given
-//        Long userId = 1L;
-//        UserRq rq = new UserRq("newUsername", "new@mail.com", true, List.of("ROLE_user"));
-//
-//        when(userRqToUserConverter.convert(rq)).thenReturn(null);
-//
-//        // When / Then
-//        assertThrows(IllegalArgumentException.class, () -> userService.update(userId, rq));
-//    }
+        when(userRqToUserConverter.convert(rq)).thenReturn(updateUser);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(userRepository.save(existingUser)).thenReturn(savedUser);
+        when(userToUserRsConverter.convert(savedUser)).thenReturn(rs);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        when(authentication.getAuthorities()).thenReturn(Collections.emptyList());
 
+        UserRs result = userService.update(userId, rq);
 
+        assertNotNull(result);
+        assertEquals("admin", result.getUsername());
+        assertEquals("admin@mail.com", result.getEmail());
+        verify(userRepository).save(existingUser);
+    }
 
+    @Test
+    void updateUserIsNotAdminOnlyUsername() {
 
+        Long userId = 1L;
+        User updateUser = User.builder()
+                .id(1L)
+                .username("user")
+                .email("user@mail.com")
+                .password("Password123")
+                .roles("user")
+                .enabled(true)
+                .build();
+        User existingUser = User.builder()
+                .id(1L)
+                .username("userOld")
+                .email("userOld@mail.com")
+                .password("Password123")
+                .roles("user")
+                .enabled(true)
+                .build();
+        User savedUser = User.builder()
+                .id(1L)
+                .username("user")
+                .email("userOld@mail.com")
+                .password("Password123")
+                .roles("user")
+                .enabled(true)
+                .build();
+        UserRq rq = UserRq.builder()
+                .username("user")
+                .email("user@mail.com")
+                .password("Password123")
+                .roles("user")
+                .enabled(true)
+                .build();
+        UserRs rs = UserRs.builder()
+                .id(1L)
+                .username("user")
+                .email("userOld@mail.com")
+                .roles("user")
+                .isEnabled(true)
+                .build();
 
+        when(userRqToUserConverter.convert(rq)).thenReturn(updateUser);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(userRepository.save(existingUser)).thenReturn(savedUser);
+        when(userToUserRsConverter.convert(savedUser)).thenReturn(rs);
+        when(authentication.getAuthorities()).thenReturn(Collections.emptyList());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-//    @Test
-//    void updateSuccess() {
-//        User user = User.builder()
-//                .id(1L)
-//                .username("admin")
-//                .email("admin@mail.com")
-//                .password("Password123")
-//                .roles("admin")
-//                .enabled(true)
-//                .build();
-//        UserRq rq = UserRq.builder()
-//                .username("adminUp")
-//                .email("adminUp@mail.com")
-//                .password("Password123")
-//                .roles("admin")
-//                .enabled(true)
-//                .build();
-//        UserRs rs = UserRs.builder()
-//                .id(1L)
-//                .username("adminUp")
-//                .email("adminUp@mail.com")
-//                .roles("admin")
-//                .isEnabled(true)
-//                .build();
-//        given(userRqToUserConverter.convert(any(UserRq.class))).willReturn(user);
-//        given(userRepository.findById(anyLong())).willReturn(Optional.of(user));
-//        given(userRepository.save(any(User.class))).willReturn(user);
-//        given(userToUserRsConverter.convert(any(User.class))).willReturn(rs);
-//
-//        UserRs savedUser = userService.update(1L, rq);
-//
-//        assertEquals("adminUp", savedUser.getUsername());
-//        assertEquals("adminUp@mail.com",savedUser.getEmail());
-//    }
-//
-//    @Test
-//    void updateFail() {
-//        UserRq rq = UserRq.builder().build();
-//        assertThrows(IllegalArgumentException.class, () -> {
-//            userService.update(1L, rq);
-//        });
-//    }
+        UserRs result = userService.update(userId, rq);
+
+        assertNotNull(result);
+        assertEquals("user", result.getUsername());
+        assertEquals("userOld@mail.com", result.getEmail());
+        Mockito.verify(userRepository).save(existingUser);
+    }
+
+    @Test
+    void updateUserNotFoundFail() {
+        Long userId = 1L;
+        UserRq rq = UserRq.builder()
+                .username("user")
+                .email("user@mail.com")
+                .password("Password123")
+                .roles("user")
+                .enabled(true)
+                .build();
+        User updateUser = User.builder()
+                .id(1L)
+                .username("user")
+                .email("user@mail.com")
+                .password("Password123")
+                .roles("user")
+                .enabled(true)
+                .build();
+
+        when(userRqToUserConverter.convert(rq)).thenReturn(updateUser);
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class, () -> userService.update(userId, rq));
+    }
+
+    @Test
+    void updateConversionFail() {
+        // Given
+        Long userId = 1L;
+        UserRq rq = UserRq.builder()
+                .username("user")
+                .email("user@mail.com")
+                .password("Password123")
+                .roles("user")
+                .enabled(true)
+                .build();
+
+        when(userRqToUserConverter.convert(rq)).thenReturn(null);
+
+        assertThrows(IllegalArgumentException.class, () -> userService.update(userId, rq));
+    }
+
 
     @Test
     void deleteByIdUserSuccess() {
         User user = User.builder().id(1L).build();
         given(userRepository.findById(1L)).willReturn(Optional.of(user));
+
         userService.deleteById(1L);
+
         verify(userRepository, times(1)).delete(user);
     }
 
@@ -395,6 +392,78 @@ class UserServiceTest {
         given(userRepository.findById(1L)).willReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class, () -> {
             userService.deleteById(1L);
+        });
+    }
+
+    @Test
+    void changePasswordSuccess(){
+        Long userId = 1L;
+        User user = User.builder().id(1L).password("oldPassword123").build();
+        PasswordRq rq = PasswordRq.builder()
+                .oldPassword("oldPassword123")
+                .newPassword("Password123")
+                .confirmNewPassword("Password123")
+                .build();
+
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+        when(passwordEncoder.encode(anyString())).thenReturn("anyString");
+        when(userRepository.save(any(User.class))).thenReturn(user);
+
+        userService.changePassword(userId,rq);
+
+        verify(userRepository, times(1)).save(user);
+    }
+
+    @Test
+    void changePasswordUserNotFoundFail(){
+        Long userId = 1L;
+        PasswordRq rq = PasswordRq.builder()
+                .oldPassword("oldPassword123")
+                .newPassword("Password123")
+                .confirmNewPassword("Password123")
+                .build();
+
+        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> {
+            userService.changePassword(userId,rq);
+        });
+    }
+
+    @Test
+    void changePasswordOldPasswordIncorrectFail(){
+        Long userId = 1L;
+        User user = User.builder().id(1L).password("oldPassword123").build();
+        PasswordRq rq = PasswordRq.builder()
+                .oldPassword("failPassword")
+                .newPassword("Password123")
+                .confirmNewPassword("Password123")
+                .build();
+
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
+
+        assertThrows(BadCredentialsException.class, () -> {
+            userService.changePassword(userId,rq);
+        });
+    }
+
+    @Test
+    void changePasswordNotMatchNewPasswordsFail(){
+        Long userId = 1L;
+        User user = User.builder().id(1L).password("oldPassword123").build();
+        PasswordRq rq = PasswordRq.builder()
+                .oldPassword("oldPassword123")
+                .newPassword("Password123")
+                .confirmNewPassword("FailPassword123")
+                .build();
+
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+
+        assertThrows(PasswordChangeIllegalArgumentException.class, () -> {
+            userService.changePassword(userId,rq);
         });
     }
 }

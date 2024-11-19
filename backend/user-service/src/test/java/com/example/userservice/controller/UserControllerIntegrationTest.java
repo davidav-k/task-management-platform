@@ -1,5 +1,6 @@
 package com.example.userservice.controller;
 
+import com.example.userservice.dto.PasswordRq;
 import com.example.userservice.dto.StatusCode;
 import com.example.userservice.dto.UserRq;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,10 +18,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 import static org.hamcrest.Matchers.any;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
@@ -46,7 +43,6 @@ public class UserControllerIntegrationTest {
     String tokenAdmin;
 
     String tokenUser1;
-
 
     @BeforeEach
     void setUp() throws Exception {
@@ -173,7 +169,7 @@ public class UserControllerIntegrationTest {
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.username").value("Username must be between 3 and 20 characters"))
                 .andExpect(jsonPath("$.data.email").value("The email address must be in the format user@example.com"))
-                .andExpect(jsonPath("$.data.password").value("The password length must be from 8 no more than 255 characters."))
+                .andExpect(jsonPath("$.data.password").value("Password must contain at least one digit, one lowercase letter, one uppercase letter, and be at least 8 characters long"))
                 .andExpect(jsonPath("$.data.roles").value("Roles must be not empty"));
 
     }
@@ -275,7 +271,7 @@ public class UserControllerIntegrationTest {
                 .andExpect(jsonPath("$.message").value("Provided arguments are not valid"))
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.username").value("Username must be between 3 and 20 characters"))
-                .andExpect(jsonPath("$.data.password").value("The password length must be from 8 no more than 255 characters."))
+                .andExpect(jsonPath("$.data.password").value("Password must contain at least one digit, one lowercase letter, one uppercase letter, and be at least 8 characters long"))
                 .andExpect(jsonPath("$.data.email").value("The email address must be in the format user@example.com"))
                 .andExpect(jsonPath("$.data.roles").value("Roles must be not empty"));
     }
@@ -327,98 +323,98 @@ public class UserControllerIntegrationTest {
                 .andExpect(jsonPath("$.message").value("No permission"));
     }
 
-//    @Test
-//    void testChangeUserPasswordSuccess() throws Exception {
-//
-//        Map<String, String> passwordMap = new HashMap<>();
-//        passwordMap.put("oldPassword", "user");
-//        passwordMap.put("newPassword", "Abc12345");
-//        passwordMap.put("confirmNewPassword", "Abc12345");
-//
-//        this.mockMvc.perform(patch(baseUrl + "/user/2/password")
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(objectMapper.writeValueAsString(passwordMap))
-//                        .accept(MediaType.APPLICATION_JSON)
-//                        .header("Authorization", tokenAdmin))
-//                .andExpect(jsonPath("$.flag").value(true))
-//                .andExpect(jsonPath("$.code").value(StatusCode.SUCCESS))
-//                .andExpect(jsonPath("$.message").value("Change password success"))
-//                .andExpect(jsonPath("$.data").isEmpty());
-//    }
-//
-//    @Test
-//    void testChangeUserPasswordWithWrongOldPassword() throws Exception {
-//
-//        Map<String, String> passwordMap = new HashMap<>();
-//        passwordMap.put("oldPassword", "wronguser");
-//        passwordMap.put("newPassword", "Abc12345");
-//        passwordMap.put("confirmNewPassword", "Abc12345");
-//
-//        this.mockMvc.perform(patch(baseUrl + "/user/2/password")
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(objectMapper.writeValueAsString(passwordMap))
-//                        .accept(MediaType.APPLICATION_JSON)
-//                        .header("Authorization", tokenAdmin))
-//                .andExpect(jsonPath("$.flag").value(false))
-//                .andExpect(jsonPath("$.code").value(StatusCode.UNAUTHORIZED))
-//                .andExpect(jsonPath("$.message").value("username or password is incorrect"))
-//                .andExpect(jsonPath("$.data").value("Old password is incorrect"));
-//    }
-//
-//    @Test
-//    void testChangeUserPasswordWithNewPasswordNotMatchingConfirmNewPassword() throws Exception {
-//
-//        Map<String, String> passwordMap = new HashMap<>();
-//        passwordMap.put("oldPassword", "user");
-//        passwordMap.put("newPassword", "Abc12345");
-//        passwordMap.put("confirmNewPassword", "AAbc12345");
-//
-//        this.mockMvc.perform(patch(baseUrl + "/user/2/password")
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(objectMapper.writeValueAsString(passwordMap))
-//                        .accept(MediaType.APPLICATION_JSON)
-//                        .header("Authorization", tokenAdmin))
-//                .andExpect(jsonPath("$.flag").value(false))
-//                .andExpect(jsonPath("$.code").value(StatusCode.INVALID_ARGUMENT))
-//                .andExpect(jsonPath("$.message").value("New password and confirm new password do not match"))
-//                .andExpect(jsonPath("$.data").isEmpty());
-//    }
-//
-//    @Test
-//    void testChangeUserPasswordWithUserNotFound() throws Exception {
-//
-//        Map<String, String> passwordMap = new HashMap<>();
-//        passwordMap.put("oldPassword", "user");
-//        passwordMap.put("newPassword", "Abc12345");
-//        passwordMap.put("confirmNewPassword", "AAbc12345");
-//
-//        this.mockMvc.perform(patch(baseUrl + "/user/5/password")
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(objectMapper.writeValueAsString(passwordMap))
-//                        .accept(MediaType.APPLICATION_JSON)
-//                        .header("Authorization", tokenAdmin))
-//                .andExpect(jsonPath("$.flag").value(false))
-//                .andExpect(jsonPath("$.code").value(StatusCode.NOT_FOUND))
-//                .andExpect(jsonPath("$.message").value("User with id 5 not found"))
-//                .andExpect(jsonPath("$.data").isEmpty());
-//    }
-//
-//    @Test
-//    void testChangeUserPasswordNotConfirmingToPasswordPolicy() throws Exception {
-//
-//        Map<String, String> passwordMap = new HashMap<>();
-//        passwordMap.put("oldPassword", "user");
-//        passwordMap.put("newPassword", "Abc");
-//        passwordMap.put("confirmNewPassword", "Abc");
-//
-//        this.mockMvc.perform(patch(baseUrl + "/user/2/password")
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(objectMapper.writeValueAsString(passwordMap))
-//                        .accept(MediaType.APPLICATION_JSON)
-//                        .header("Authorization", tokenAdmin))
-//                .andExpect(jsonPath("$.flag").value(false))
-//                .andExpect(jsonPath("$.code").value(StatusCode.INVALID_ARGUMENT))
-//                .andExpect(jsonPath("$.message").value("New password does not conform to password policy"))
-//                .andExpect(jsonPath("$.data").isEmpty());
-//    }
+    @Test
+    void testChangeUserPasswordSuccess() throws Exception {
+
+        PasswordRq rq = PasswordRq.builder()
+                .oldPassword("Password123")
+                .newPassword("Abc12345")
+                .confirmNewPassword("Abc12345")
+                .build();
+
+        this.mockMvc.perform(patch(baseUrl + "/user/2/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(rq))
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header("Authorization", tokenAdmin))
+                .andExpect(jsonPath("$.flag").value(true))
+                .andExpect(jsonPath("$.code").value(StatusCode.SUCCESS))
+                .andExpect(jsonPath("$.message").value("Change password success"));
+    }
+
+    @Test
+    void testChangeUserPasswordWithWrongOldPassword() throws Exception {
+
+        PasswordRq rq = PasswordRq.builder()
+                .oldPassword("wronguser")
+                .newPassword("Abc12345")
+                .confirmNewPassword("Abc12345")
+                .build();
+        this.mockMvc.perform(patch(baseUrl + "/user/2/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(rq))
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header("Authorization", tokenAdmin))
+                .andExpect(jsonPath("$.flag").value(false))
+                .andExpect(jsonPath("$.code").value(StatusCode.UNAUTHORIZED))
+                .andExpect(jsonPath("$.message").value("username or password is incorrect"))
+                .andExpect(jsonPath("$.data").value("Old password is incorrect"));
+    }
+
+    @Test
+    void testChangeUserPasswordWithNewPasswordNotMatchingConfirmNewPassword() throws Exception {
+
+        PasswordRq rq = PasswordRq.builder()
+                .oldPassword("Password123")
+                .newPassword("Abc12345")
+                .confirmNewPassword("Abc98765")
+                .build();
+
+        this.mockMvc.perform(patch(baseUrl + "/user/2/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(rq))
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header("Authorization", tokenAdmin))
+                .andExpect(jsonPath("$.flag").value(false))
+                .andExpect(jsonPath("$.code").value(StatusCode.INVALID_ARGUMENT))
+                .andExpect(jsonPath("$.message").value("New password and confirm new password do not match"));
+    }
+
+    @Test
+    void testChangeUserPasswordWithUserNotFound() throws Exception {
+
+        PasswordRq rq = PasswordRq.builder()
+                .oldPassword("Password123")
+                .newPassword("Abc12345")
+                .confirmNewPassword("Abc12345")
+                .build();
+
+        this.mockMvc.perform(patch(baseUrl + "/user/5/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(rq))
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header("Authorization", tokenAdmin))
+                .andExpect(jsonPath("$.flag").value(false))
+                .andExpect(jsonPath("$.code").value(StatusCode.NOT_FOUND))
+                .andExpect(jsonPath("$.message").value("User with id 5 not found"));
+    }
+
+    @Test
+    void testChangeUserPasswordNotConfirmingToPasswordPolicy() throws Exception {
+
+        PasswordRq rq = PasswordRq.builder()
+                .oldPassword("Password123")
+                .newPassword("Abc")
+                .confirmNewPassword("Abc")
+                .build();
+
+        this.mockMvc.perform(patch(baseUrl + "/user/2/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(rq))
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header("Authorization", tokenAdmin))
+                .andExpect(jsonPath("$.flag").value(false))
+                .andExpect(jsonPath("$.code").value(StatusCode.INVALID_ARGUMENT))
+                .andExpect(jsonPath("$.message").value("Provided arguments are not valid"));
+    }
 }

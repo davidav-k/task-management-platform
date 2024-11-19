@@ -1,17 +1,12 @@
 package com.example.userservice.controller;
 
-import com.example.userservice.dto.Result;
-import com.example.userservice.dto.StatusCode;
-import com.example.userservice.dto.UserRq;
-import com.example.userservice.dto.UserRs;
+import com.example.userservice.dto.*;
 import com.example.userservice.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -51,16 +46,9 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}/password")
-    public Result changePassword(@PathVariable Long userId, @RequestBody Map<String, String> passwordMap){
-
-        String oldPassword = passwordMap.get("oldPassword");
-        String newPassword = passwordMap.get("newPassword");
-        String confirmNewPassword = passwordMap.get("confirmNewPassword");
-
-        userService.changePassword(userId, oldPassword, newPassword, confirmNewPassword);
-
-        return new Result(true, StatusCode.SUCCESS, "Change password success", null);
+    public Result changePassword(@PathVariable Long userId, @RequestBody @Valid PasswordRq rq){
+        userService.changePassword(userId, rq);
+        return new Result(true, StatusCode.SUCCESS, "Change password success");
     }
-
 
 }

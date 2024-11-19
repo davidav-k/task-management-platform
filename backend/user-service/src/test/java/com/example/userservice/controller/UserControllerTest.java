@@ -1,5 +1,6 @@
 package com.example.userservice.controller;
 
+import com.example.userservice.dto.PasswordRq;
 import com.example.userservice.dto.StatusCode;
 import com.example.userservice.dto.UserRq;
 import com.example.userservice.dto.UserRs;
@@ -43,65 +44,8 @@ class UserControllerTest {
     @Value("${api.endpoint.base-url}")
     String baseUrl;
 
-
     @Test
-    void createUserSuccess() throws Exception {
-        UserRq rq = UserRq.builder()
-                .username("admin")
-                .email("admin@mail.com")
-                .password("Password123")
-                .roles("admin")
-                .enabled(true)
-                .build();
-        UserRs rs = UserRs.builder()
-                .id(1L)
-                .username("admin")
-                .email("admin@mail.com")
-                .roles("admin")
-                .isEnabled(true)
-                .build();
-
-        given(userService.createUser(any(UserRq.class))).willReturn(rs);
-
-        mockMvc.perform(post(baseUrl + "/user")
-                                .accept(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(rq))
-                                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.timestamp").isNotEmpty())
-                .andExpect(jsonPath("$.flag").value(true))
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.message").value("User created successfully"))
-                .andExpect(jsonPath("$.data").exists())
-                .andExpect(jsonPath("$.data.username").value("admin"))
-                .andExpect(jsonPath("$.data.email").value("admin@mail.com"))
-                .andExpect(jsonPath("$.data.roles").value("admin"))
-                .andExpect(jsonPath("$.data.password").doesNotExist());
-    }
-
-    @Test
-    void createUserFail() throws Exception {
-        UserRq rq = UserRq.builder()
-                .username("")
-                .email("")
-                .password("")
-                .roles("")
-                .enabled(true)
-                .build();
-        mockMvc.perform(
-                post(baseUrl + "/user")
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(rq))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.timestamp").isNotEmpty())
-                .andExpect(jsonPath("$.flag").value(false))
-                .andExpect(jsonPath("$.code").value(400))
-                .andExpect(jsonPath("$.message").value("Provided arguments are not valid"))
-                .andExpect(jsonPath("$.data.password").value("Password must contain at least one digit, one lowercase letter, one uppercase letter, and be at least 8 characters long"))
-                .andExpect(jsonPath("$.data.username").value("Username must be between 3 and 20 characters"));
-    }
-
-    @Test
-    void findUserByIdSuccess() throws Exception {
+    void findByIdSuccess() throws Exception {
         UserRs rs = UserRs.builder()
                 .id(1L)
                 .username("admin")
@@ -125,7 +69,7 @@ class UserControllerTest {
     }
 
     @Test
-    void findUserByIdFail() throws Exception {
+    void findByIdFail() throws Exception {
 
         given(userService.findById(anyLong())).willThrow(new EntityNotFoundException("User with id 3 not found"));
 
@@ -138,21 +82,59 @@ class UserControllerTest {
     }
 
     @Test
-    void findAllSuccess() throws Exception {
-        UserRs userRs1 = UserRs.builder().id(1L).build();
-        UserRs userRs2 = UserRs.builder().id(2L).build();
-        UserRs userRs3 = UserRs.builder().id(3L).build();
-        List<UserRs> rs = new ArrayList<>(List.of(userRs1, userRs2, userRs3));
-        given(userService.findAll()).willReturn(rs);
+    void createSuccess() throws Exception {
+        UserRq rq = UserRq.builder()
+                .username("admin")
+                .email("admin@mail.com")
+                .password("Password123")
+                .roles("admin")
+                .enabled(true)
+                .build();
+        UserRs rs = UserRs.builder()
+                .id(1L)
+                .username("admin")
+                .email("admin@mail.com")
+                .roles("admin")
+                .isEnabled(true)
+                .build();
 
-        mockMvc.perform(get(baseUrl + "/user").accept(MediaType.APPLICATION_JSON))
+        given(userService.createUser(any(UserRq.class))).willReturn(rs);
+
+        mockMvc.perform(post(baseUrl + "/user")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(rq))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
                 .andExpect(jsonPath("$.flag").value(true))
-                .andExpect(jsonPath("$.code").value(StatusCode.SUCCESS))
-                .andExpect(jsonPath("$.message").value("Found all"))
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.message").value("User created successfully"))
                 .andExpect(jsonPath("$.data").exists())
-                .andExpect(jsonPath("$.data.size()").value(3))
-                .andExpect(jsonPath("$.data[0].id").value(1))
-                .andExpect(jsonPath("$.data[1].id").value(2));
+                .andExpect(jsonPath("$.data.username").value("admin"))
+                .andExpect(jsonPath("$.data.email").value("admin@mail.com"))
+                .andExpect(jsonPath("$.data.roles").value("admin"))
+                .andExpect(jsonPath("$.data.password").doesNotExist());
+    }
+
+    @Test
+    void createFail() throws Exception {
+        UserRq rq = UserRq.builder()
+                .username("")
+                .email("")
+                .password("")
+                .roles("")
+                .enabled(true)
+                .build();
+        mockMvc.perform(
+                        post(baseUrl + "/user")
+                                .accept(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(rq))
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.flag").value(false))
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.message").value("Provided arguments are not valid"))
+                .andExpect(jsonPath("$.data.password").value("Password must contain at least one digit, one lowercase letter, one uppercase letter, and be at least 8 characters long"))
+                .andExpect(jsonPath("$.data.username").value("Username must be between 3 and 20 characters"));
     }
 
     @Test
@@ -230,6 +212,62 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.flag").value(false))
                 .andExpect(jsonPath("$.code").value(StatusCode.NOT_FOUND))
                 .andExpect(jsonPath("$.message").value("user not found"));
+
+    }
+
+    @Test
+    void findAllSuccess() throws Exception {
+        UserRs userRs1 = UserRs.builder().id(1L).build();
+        UserRs userRs2 = UserRs.builder().id(2L).build();
+        UserRs userRs3 = UserRs.builder().id(3L).build();
+        List<UserRs> rs = new ArrayList<>(List.of(userRs1, userRs2, userRs3));
+        given(userService.findAll()).willReturn(rs);
+
+        mockMvc.perform(get(baseUrl + "/user").accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(true))
+                .andExpect(jsonPath("$.code").value(StatusCode.SUCCESS))
+                .andExpect(jsonPath("$.message").value("Found all"))
+                .andExpect(jsonPath("$.data").exists())
+                .andExpect(jsonPath("$.data.size()").value(3))
+                .andExpect(jsonPath("$.data[0].id").value(1))
+                .andExpect(jsonPath("$.data[1].id").value(2));
+    }
+
+    @Test
+    void changePasswordSuccess() throws Exception {
+        PasswordRq rq = PasswordRq.builder()
+                .oldPassword("oldPassword123")
+                .newPassword("newPassword123")
+                .confirmNewPassword("newPassword123")
+                .build();
+        doNothing().when(userService).changePassword(anyLong(),any(PasswordRq.class));
+
+        this.mockMvc.perform(patch(baseUrl + "/user/1/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(rq))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(true))
+                .andExpect(jsonPath("$.code").value(StatusCode.SUCCESS))
+                .andExpect(jsonPath("$.message").value("Change password success"));
+
+    }
+
+    @Test
+    void changePasswordFail() throws Exception {
+        PasswordRq rq = PasswordRq.builder()
+                .oldPassword("oldPassword123")
+                .newPassword("password")
+                .confirmNewPassword("password")
+                .build();
+
+        this.mockMvc.perform(patch(baseUrl + "/user/1/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(rq))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(false))
+                .andExpect(jsonPath("$.code").value(StatusCode.INVALID_ARGUMENT))
+                .andExpect(jsonPath("$.message").value("Provided arguments are not valid"))
+                .andExpect(jsonPath("$.data.newPassword").value("Password must contain at least one digit, one lowercase letter, one uppercase letter, and be at least 8 characters long"));
 
     }
 }
