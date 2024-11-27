@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: postgres:12.3
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: userservice
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 2
+
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+
+  tmp-user-service:
+    container_name: tmp-user-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SERVER_PORT: 8181
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/userservice
+      SPRING_PROFILES_ACTIVE: local
+    ports:
+      - "8181:8181"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+
+volumes:
+  pgadmin-data:
+
+networks:
+  default:
+    name: tmp-network
+    external: true
+

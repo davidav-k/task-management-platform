@@ -1,0 +1,32 @@
+server:
+  port: 8181
+
+spring:
+  data:
+    redis:
+      host: redis
+      port: 6379
+
+  config:
+    activate:
+      on-profile: local
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/userservice
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: postgres
+    hikari:
+      schema: userservice
+      connection-init-sql: CREATE SCHEMA IF NOT EXISTS userservice
+      connection-timeout: 10000
+  liquibase:
+    enabled: true
+    drop-first: false
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: userservice
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    generate-ddl: true

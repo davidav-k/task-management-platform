@@ -1,0 +1,10 @@
+
+spring:
+  application:
+    name: tmp-user-service
+  profiles:
+    active: local
+api:
+  endpoint:
+    base-url: /api/v1
+

@@ -1,4 +1,4 @@
-# User Service
+# User Service (tms_v2)
 
 This service handles user management, including:
 - User registration
@@ -8,4 +8,4 @@ This service handles user management, including:
 ## Technologies
 - Spring Boot
 - PostgreSQL for user data storage
-- Redis for storing access tokens
+- Redis for storing tokens
