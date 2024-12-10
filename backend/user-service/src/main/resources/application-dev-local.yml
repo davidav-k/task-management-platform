@@ -23,12 +23,3 @@ spring:
       ddl-auto: update
     show-sql: false
     generate-ddl: true
-
-app:
-  jwt:
-    secret: "dev-local-secret-key"
-    tokenExpiration: 30m
-    refreshTokenExpiration: 300m
-
-
-

@@ -29,3 +29,7 @@ api:
 app:
   default:
     role: ROLE_USER
+  jwt:
+    secret: "jsonwebtoken-secret-key"
+    tokenExpiration: 30m
+    refreshTokenExpiration: 300m
