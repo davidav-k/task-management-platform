@@ -9,6 +9,12 @@ import org.hibernate.annotations.OnDeleteAction;
 import java.util.UUID;
 
 
+/**
+ * Represents the Confirmation entity that stores key-based verification information
+ * associated with a specific user.
+ * This class is used to verify user actions such as
+ * email confirmation and password resets.
+ */
 @Getter
 @Setter
 @ToString
@@ -20,9 +26,7 @@ import java.util.UUID;
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class ConfirmationEntity extends Auditable {
 
-
     private String key;
-
 
     @OneToOne(targetEntity = UserEntity.class, fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
@@ -34,6 +38,7 @@ public class ConfirmationEntity extends Auditable {
 
     public ConfirmationEntity(UserEntity userEntity, String key) {
         this.userEntity = userEntity;
-        this.key= UUID.randomUUID().toString();
+        this.key = UUID.randomUUID().toString();
     }
 }
+
