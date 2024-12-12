@@ -19,7 +19,7 @@ public class EmailServiceImpl implements EmailService {
     private static final String NEW_USER_ACCOUNT_VERIFICATION = "New user account verification";
     private static final String PASSWORD_RESET_REQUEST = "Password reset request";
     private final JavaMailSender sender;
-    @Value("${spring.mail.verfy.host}")
+    @Value("${spring.mail.verify.host}")
     private String host;
     @Value("${spring.mail.username}")
     private String fromEmail;

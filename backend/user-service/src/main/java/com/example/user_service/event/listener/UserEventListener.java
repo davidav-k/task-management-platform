@@ -13,10 +13,10 @@ public class UserEventListener {
     private final EmailService emailService;
 
     @EventListener
-    public void onUserEvent(UserEvent event) {
-        switch (event.getType()) {
-            case REGISTRATION -> emailService.sendNewAccountEmail(event.getUser().getFirstName(), event.getUser().getEmail(), (String) event.getData().get("key"));
-            case RESETPASSWORD -> emailService.sendPasswordResetEmail(event.getUser().getFirstName(), event.getUser().getEmail(), (String) event.getData().get("key"));
+    public void onUserEvent(UserEvent userEvent) {
+        switch (userEvent.getType()) {
+            case REGISTRATION -> emailService.sendNewAccountEmail(userEvent.getUser().getFirstName(), userEvent.getUser().getEmail(), (String) userEvent.getData().get("key"));
+            case RESETPASSWORD -> emailService.sendPasswordResetEmail(userEvent.getUser().getFirstName(), userEvent.getUser().getEmail(), (String) userEvent.getData().get("key"));
             default -> {}
         }
     }

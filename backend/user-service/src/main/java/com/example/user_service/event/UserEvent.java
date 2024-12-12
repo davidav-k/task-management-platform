@@ -7,8 +7,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Map;
-@Setter
 @Getter
+@Setter
 @AllArgsConstructor
 public class UserEvent {
 
