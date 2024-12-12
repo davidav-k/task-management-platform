@@ -13,7 +13,7 @@ CONTAINER_PORT: 8085
 EMAIL_HOST: smtp.gmail.com
 EMAIL_PORT: 587
 EMAIL_ID: davidtnko@gmail.com
-EMAIL_PASSWORD: xbKfw58pIP7WvlT
+EMAIL_PASSWORD:
 VERIFY_EMAIL_HOST: http://localhost:8085
 
 
