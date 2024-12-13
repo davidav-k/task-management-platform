@@ -64,9 +64,9 @@ public class UserEntity extends Auditable {
     private String qrCodeSecret;
 
     /**
-     * The URL of the QR code image used for multi-factor authentication.
+     * The URL of the QR code image used for multifactorial authentication.
      */
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "text")
     private String qrCodeImageUrl;
 
     @ManyToOne(fetch = FetchType.EAGER)
