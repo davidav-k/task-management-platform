@@ -6,6 +6,12 @@ package com.example.user_service.utils;
  * <p>This class provides static methods for creating email messages used to notify
  * users about events like account verification and password reset requests. The
  * messages include URLs that guide users to the appropriate action page.</p>
+ *
+ * <p>Usage example:</p>
+ * <pre>
+ *     String message = EmailUtils.getEmailMessage("John", "https://example.com", "verificationToken");
+ *     String resetMessage = EmailUtils.getResetPasswordMessage("John", "https://example.com", "resetToken");
+ * </pre>
  */
 public class EmailUtils {
 
@@ -73,4 +79,5 @@ public class EmailUtils {
         return host + "/verify/password?token=" + token;
     }
 }
+
 
