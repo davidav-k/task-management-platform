@@ -31,6 +31,17 @@ services:
     volumes:
       - pgadminvolume:/var/lib/pgadmin
 
+  mailhog:
+    container_name: mailhogcontainer
+    image: mailhog/mailhog
+    restart: always
+    expose:
+      - 1025
+      - 8025
+    ports:
+      - "1025:1025" # SMTP-сервер для отправки почты
+      - "8025:8025" # Веб-интерфейс для просмотра писем
+
 volumes:
-    pgadminvolume:
-    postgresvolume:
+  pgadminvolume:
+  postgresvolume:

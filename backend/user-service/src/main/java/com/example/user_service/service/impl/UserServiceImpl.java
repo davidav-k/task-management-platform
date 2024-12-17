@@ -90,7 +90,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public void createUser(String firstName, String lastName, String email, String password) {
-        UserEntity userEntity = createNewUser(firstName, lastName, email);
+        UserEntity userEntity = userRepository.save(createNewUser(firstName, lastName, email));
         CredentialEntity credentialEntity = new CredentialEntity(userEntity, password);
         credentialRepository.save(credentialEntity);
         var confirmationEntity = new ConfirmationEntity(userEntity);

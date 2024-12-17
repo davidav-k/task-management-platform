@@ -13,7 +13,7 @@ package com.example.user_service.domain;
  *   <li>{@code ThreadLocal} - Used to store user-specific data in the current thread's context.</li>
  * </ul>
  */
-public class RequestContext {
+public class RequestContextUserId {
 
     /**
      * Thread-local variable to store the user ID for the current thread.
@@ -23,7 +23,7 @@ public class RequestContext {
     /**
      * Private constructor to prevent instantiation of this utility class.
      */
-    private RequestContext() {}
+    private RequestContextUserId() {}
 
     /**
      * Clears the user ID from the thread-local storage.

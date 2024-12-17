@@ -10,10 +10,10 @@ ACTIVE_PROFILE: dev
 CONTAINER_PORT: 8085
 
 #mail
-EMAIL_HOST: smtp.gmail.com
-EMAIL_PORT: 587
-EMAIL_ID: davidtnko@gmail.com
-EMAIL_PASSWORD:
+EMAIL_HOST: localhost
+EMAIL_PORT: 1025
+EMAIL_ID: "user@mail.com"
+EMAIL_PASSWORD: "Password123"
 VERIFY_EMAIL_HOST: http://localhost:8085
 
 

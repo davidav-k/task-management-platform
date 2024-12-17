@@ -44,19 +44,30 @@ spring:
     password: ${EMAIL_PASSWORD}
     default-encoding: UTF-8
     properties:
+#      for localhost
       mail:
         mime:
-          charset: UTF
+          charset: UTF-8
         smtp:
-          writetimeout: 10000
-          connectiontimeout: 10000
-          timeout: 10000
-          auth: true
+          auth: false
           starttls:
-            enable: true
-            required: true
+            enable: false
+#  mail:
+#    properties:
+#      mail:
+#        mime:
+#          charset: UTF
+#        smtp:
+#          writetimeout: 10000
+#          connectiontimeout: 10000
+#          timeout: 10000
+#          auth: false
+#          starttls:
+#            enable: false
+#            required: true
     verify:
       host: ${VERIFY_EMAIL_HOST}
+
 server:
   port: ${CONTAINER_PORT:8080}
   error:

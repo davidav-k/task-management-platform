@@ -1,6 +1,6 @@
 package com.example.user_service.entity;
 
-import com.example.user_service.domain.RequestContext;
+import com.example.user_service.domain.RequestContextUserId;
 import com.example.user_service.exception.ApiException;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
@@ -90,11 +90,11 @@ public abstract class Auditable {
      * to the current timestamp and user ID from the request context. Throws an {@code ApiException}
      * if no user ID is found in the request context.</p>
      *
-     * @throws ApiException if user ID is not present in the RequestContext
+     * @throws ApiException if user ID is not present in the RequestContextUserId
      */
     @PrePersist
     protected void onCreate() {
-        var userId = RequestContext.getUserId();
+        var userId = RequestContextUserId.getUserId();
         if (userId == null) {
             throw new ApiException("Cannot persist entity without user ID in Request Context for this thread");
         }
@@ -111,11 +111,11 @@ public abstract class Auditable {
      * timestamp and user ID from the request context. Throws an {@code ApiException}
      * if no user ID is found in the request context.</p>
      *
-     * @throws ApiException if user ID is not present in the RequestContext
+     * @throws ApiException if user ID is not present in the RequestContextUserId
      */
     @PreUpdate
     protected void onUpdate() {
-        var userId = RequestContext.getUserId();
+        var userId = RequestContextUserId.getUserId();
         if (userId == null) {
             throw new ApiException("Cannot update entity without user ID in Request Context for this thread");
         }

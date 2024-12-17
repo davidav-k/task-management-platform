@@ -45,87 +45,42 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class EmailServiceImpl implements EmailService {
-
-    /**
-     * Subject line for new user account verification emails.
-     */
     private static final String NEW_USER_ACCOUNT_VERIFICATION = "New user account verification";
-
-    /**
-     * Subject line for password reset request emails.
-     */
     private static final String PASSWORD_RESET_REQUEST = "Password reset request";
 
-    /**
-     * The JavaMailSender used to send email messages.
-     */
     private final JavaMailSender sender;
+    private @Value("${spring.mail.verify.host}") String host;
+    private @Value("${spring.mail.username}") String fromEmail;
 
-    /**
-     * The host URL used for generating email links (e.g., verification links).
-     */
-    @Value("${spring.mail.verify.host}")
-    private String host;
-
-    /**
-     * The sender email address used in the From field of the email.
-     */
-    @Value("${spring.mail.username}")
-    private String fromEmail;
-
-    /**
-     * Sends an email to notify a new user about their account creation.
-     *
-     * <p>This method generates and sends an email containing a verification link that
-     * allows the user to verify their account. It runs asynchronously to avoid blocking
-     * the main execution thread.</p>
-     *
-     * @param name the name of the user
-     * @param email the email address of the recipient
-     * @param token the verification token used in the link
-     */
     @Override
     @Async
     public void sendNewAccountEmail(String name, String email, String token) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setSubject(NEW_USER_ACCOUNT_VERIFICATION);
-            message.setTo(fromEmail);
+            message.setFrom(fromEmail);
             message.setTo(email);
             message.setText(EmailUtils.getEmailMessage(name, host, token));
             sender.send(message);
         } catch (Exception exception) {
-            log.error(exception.getMessage());
+            log.error("Error sending new user email: {}", exception.getMessage());
             throw new ApiException("Unable to send email");
         }
     }
 
-    /**
-     * Sends an email to notify a user about a password reset request.
-     *
-     * <p>This method generates and sends an email containing a password reset link that
-     * allows the user to reset their password. It runs asynchronously to avoid blocking
-     * the main execution thread.</p>
-     *
-     * @param name the name of the user
-     * @param email the email address of the recipient
-     * @param token the password reset token used in the link
-     */
     @Override
     @Async
     public void sendPasswordResetEmail(String name, String email, String token) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setSubject(PASSWORD_RESET_REQUEST);
-            message.setTo(fromEmail);
+            message.setFrom(fromEmail);
             message.setTo(email);
             message.setText(EmailUtils.getResetPasswordMessage(name, host, token));
             sender.send(message);
         } catch (Exception exception) {
-            log.error(exception.getMessage());
+            log.error("Error sending update user email: {}", exception.getMessage());
             throw new ApiException("Unable to send email");
         }
     }
 }
-
-
