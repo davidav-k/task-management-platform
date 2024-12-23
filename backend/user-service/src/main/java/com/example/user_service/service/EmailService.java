@@ -23,9 +23,9 @@ public interface EmailService {
      *
      * @param name the name of the user
      * @param email the email address of the recipient
-     * @param token the verification token used in the link
+     * @param key the verification token used in the link
      */
-    void sendNewAccountEmail(String name, String email, String token);
+    void sendNewAccountEmail(String name, String email, String key);
 
     /**
      * Sends an email to notify a user about a password reset request.

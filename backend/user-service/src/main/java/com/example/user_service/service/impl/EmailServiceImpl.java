@@ -82,17 +82,17 @@ public class EmailServiceImpl implements EmailService {
      *
      * @param name the name of the user
      * @param email the email address of the recipient
-     * @param token the verification token used in the link
+     * @param key the verification token used in the link
      */
     @Override
     @Async
-    public void sendNewAccountEmail(String name, String email, String token) {
+    public void sendNewAccountEmail(String name, String email, String key) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setSubject(NEW_USER_ACCOUNT_VERIFICATION);
-            message.setTo(fromEmail);
+            message.setFrom(fromEmail);
             message.setTo(email);
-            message.setText(EmailUtils.getEmailMessage(name, host, token));
+            message.setText(EmailUtils.getEmailMessage(name, host, key));
             sender.send(message);
         } catch (Exception exception) {
             log.error(exception.getMessage());
@@ -117,7 +117,7 @@ public class EmailServiceImpl implements EmailService {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setSubject(PASSWORD_RESET_REQUEST);
-            message.setTo(fromEmail);
+            message.setFrom(fromEmail);
             message.setTo(email);
             message.setText(EmailUtils.getResetPasswordMessage(name, host, token));
             sender.send(message);

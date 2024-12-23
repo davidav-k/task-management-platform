@@ -1,0 +1,44 @@
+Запуск
+    подготовка:
+        application.yml:
+          sql:
+            init:
+              mode: never
+        UserServiceApplication.java:
+            Been on
+                @Bean
+                CommandLineRunner commandLineRunner(RoleRepository roleRepository)
+
+docker-compose up -d
+
+Запускаем приложение и видим что в БД созданы таблицы и в таблицу roles добавлены 2 записи ADMIN и USER из-за того
+что в UserServiceApplication.java указано создание бина, который вносит параметры ролей в БД при старте приложения
+
+Останавливаем приложение
+
+    подготовка:
+        application.yml:
+          sql:
+            init:
+                mode: always
+            UserServiceApplication.java:
+                Been off
+                    //	@Bean
+                    //	CommandLineRunner commandLineRunner(RoleRepository roleRepository) {
+                    //	этот бин необходим для первоначального создания ролей в базе данных и используется только один раз
+
+Запускаем приложение и видим что в таблицу user добавлена 1 запись SYSTEM c id = 0 из-за того
+ что в application.yml указано что при каждом запуске приложения будет происходить инициализация базы данных с помощью файла  data.sql
+
+Останавливаем приложение
+
+рабочие настройки
+            application.yml:
+            sql:
+                init:
+                    mode: never
+                UserServiceApplication.java:
+                    Been off
+                        //	@Bean
+                        //	CommandLineRunner commandLineRunner(RoleRepository roleRepository) {
+                        //	этот бин необходим для первоначального создания ролей в базе данных и используется только один раз

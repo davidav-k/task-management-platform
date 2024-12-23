@@ -1,6 +1,8 @@
 package com.example.user_service.service;
 
+import com.example.user_service.dto.User;
 import com.example.user_service.entity.RoleEntity;
+import com.example.user_service.enumeration.LoginType;
 
 /**
  * Service interface for handling user-related operations.
@@ -40,5 +42,12 @@ public interface UserService {
      * @return the RoleEntity corresponding to the specified role name
      */
     RoleEntity getRoleName(String name);
+
+    void verifyNewUserAccount(String key);
+
+    void updateLoginAttempt(String email, LoginType loginType);
+
+    User getUserByUserId(String apply);
+
 }
 

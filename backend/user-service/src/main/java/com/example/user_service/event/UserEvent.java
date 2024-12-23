@@ -37,7 +37,7 @@ public class UserEvent {
      * Additional data related to the event.
      *
      * <p>This field stores supplementary information that may be required for event processing, such as
-     * metadata or specific parameters related to the event (example key).</p>
+     * metadata or specific parameters related to the event (in this case - key).</p>
      */
     private Map<?,?> data;
 }

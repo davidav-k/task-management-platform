@@ -43,6 +43,7 @@ public class UserUtils {
                 .lastLogin(LocalDate.now())
                 .accountNonExpired(true)
                 .accountNonLocked(true)
+                .mfa(false)
                 .enabled(false)
                 .loginAttempts(0)
                 .qrCodeSecret(EMPTY)

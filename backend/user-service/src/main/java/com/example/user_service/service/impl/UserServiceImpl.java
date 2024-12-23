@@ -1,11 +1,15 @@
 package com.example.user_service.service.impl;
 
+import com.example.user_service.cache.CacheStore;
+import com.example.user_service.domain.RequestContext;
+import com.example.user_service.dto.User;
 import com.example.user_service.entity.ConfirmationEntity;
 import com.example.user_service.entity.CredentialEntity;
 import com.example.user_service.entity.RoleEntity;
 import com.example.user_service.entity.UserEntity;
 import com.example.user_service.enumeration.Authority;
 import com.example.user_service.enumeration.EventType;
+import com.example.user_service.enumeration.LoginType;
 import com.example.user_service.event.UserEvent;
 import com.example.user_service.exception.ApiException;
 import com.example.user_service.repository.ConfirmationRepository;
@@ -20,7 +24,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+
 import java.util.Map;
+
+import static java.time.LocalDate.now;
 
 /**
  * Implementation of the UserService interface for handling user-related business logic.
@@ -51,30 +58,12 @@ import java.util.Map;
 @Slf4j
 public class UserServiceImpl implements UserService {
 
-    /**
-     * Repository for managing user-related database operations.
-     */
     private final UserRepository userRepository;
-
-    /**
-     * Repository for managing role-related database operations.
-     */
     private final RoleRepository roleRepository;
-
-    /**
-     * Repository for managing credential-related database operations.
-     */
     private final CredentialRepository credentialRepository;
-
-    /**
-     * Repository for managing confirmation-related database operations.
-     */
     private final ConfirmationRepository confirmationRepository;
-
-    /**
-     * Publishes application events, such as user-related events.
-     */
     private final ApplicationEventPublisher publisher;
+    private final CacheStore<String, Integer> userCache;
 
     /**
      * Creates a new user with the specified details.
@@ -84,9 +73,9 @@ public class UserServiceImpl implements UserService {
      * that a new user has been registered.</p>
      *
      * @param firstName the first name of the user
-     * @param lastName the last name of the user
-     * @param email the email address of the user
-     * @param password the password for the user account
+     * @param lastName  the last name of the user
+     * @param email     the email address of the user
+     * @param password  the password for the user account
      */
     @Override
     public void createUser(String firstName, String lastName, String email, String password) {
@@ -114,6 +103,53 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new ApiException("Role not found"));
     }
 
+    @Override
+    public void verifyNewUserAccount(String key) {
+        ConfirmationEntity confirmationEntity = confirmationRepository.findByKey(key)
+                .orElseThrow(() -> new ApiException("Invalid key"));
+        UserEntity userEntity = userRepository.findByEmailIgnoreCase(confirmationEntity.getUserEntity().getEmail())
+                .orElseThrow(() -> new ApiException("User not found"));
+        userEntity.setEnabled(true);
+        userRepository.save(userEntity);
+        confirmationRepository.delete(confirmationEntity);
+    }
+
+    @Override
+    public void updateLoginAttempt(String email, LoginType loginType) {
+        UserEntity userByEmail = getUserByEmail(email);
+        RequestContext.setUserId(userByEmail.getId());
+        switch (loginType) {
+            case LOGIN_ATTEMPT -> {
+                if (userCache.get(userByEmail.getEmail()) == null) {
+                    userByEmail.setLoginAttempts(0);
+                    userByEmail.setAccountNonLocked(true);
+                }
+                userByEmail.setLoginAttempts(userByEmail.getLoginAttempts() + 1);
+                userCache.put(userByEmail.getEmail(), userByEmail.getLoginAttempts());
+                if (userCache.get(userByEmail.getEmail()) > 5) {
+                    userByEmail.setAccountNonLocked(false);
+
+                }
+            }
+            case LOGIN_SUCCESS -> {
+                userByEmail.setAccountNonLocked(true);
+                userByEmail.setLoginAttempts(0);
+                userByEmail.setLastLogin(now());
+                userCache.evict(userByEmail.getEmail());
+            }
+
+        }
+        userRepository.save(userByEmail);
+
+    }
+
+    private UserEntity getUserByEmail(String email) {
+        return userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new ApiException("User not found"));
+    }
+
+    public User getUserByUserId(String userId) {return null;}
+
     /**
      * Creates a new UserEntity with the specified details.
      *
@@ -122,8 +158,8 @@ public class UserServiceImpl implements UserService {
      * saved in the database by this method.</p>
      *
      * @param firstName the first name of the user
-     * @param lastName the last name of the user
-     * @param email the email address of the user
+     * @param lastName  the last name of the user
+     * @param email     the email address of the user
      * @return the newly created UserEntity
      */
     private UserEntity createNewUser(String firstName, String lastName, String email) {

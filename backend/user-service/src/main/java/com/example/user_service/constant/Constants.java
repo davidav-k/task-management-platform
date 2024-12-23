@@ -16,10 +16,16 @@ package com.example.user_service.constant;
  */
 public class Constants {
 
+    public static final String EMPTY_VALUE = "empty";
+    public static final String AUTHORITIES = "authorities";
+    public static final String ROLE = "role";
+
     /**
      * Prefix used to denote roles in the application (e.g., ROLE_USER, ROLE_ADMIN).
      */
     public static final String ROLE_PREFIX = "ROLE_";
+
+    public static final String GET_ARRAYS_LLC = "GET_ARRAYS_LLC";
 
     /**
      * Delimiter used to separate multiple authorities in a single string.

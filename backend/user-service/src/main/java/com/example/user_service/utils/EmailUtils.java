@@ -24,12 +24,12 @@ public class EmailUtils {
      *
      * @param name  the name of the user to be addressed in the email
      * @param host  the base URL of the system that will be used to construct the verification URL
-     * @param token the unique token used to verify the user's account
+     * @param key the unique token used to verify the user's account
      * @return a formatted email message containing the user's name, instructions, and a verification URL
      */
-    public static String getEmailMessage(String name, String host, String token) {
+    public static String getEmailMessage(String name, String host, String key) {
         return "Hello " + name + ",\n\nYour new account has been created. Please click on the link below to verify your account.\n\n" +
-                getVerificationUrl(host, token) + "\n\n The Support Team";
+                getVerificationUrl(host, key) + "\n\n The Support Team";
     }
 
     /**
@@ -57,11 +57,11 @@ public class EmailUtils {
      * {@code <host>/verify/account?token=<token>}.</p>
      *
      * @param host  the base URL of the system
-     * @param token the unique token used to verify the user's account
+     * @param key the unique token used to verify the user's account
      * @return the fully constructed URL for account verification
      */
-    private static String getVerificationUrl(String host, String token) {
-        return host + "/verify/account?token=" + token;
+    private static String getVerificationUrl(String host, String key) {
+        return host + "/verify/account?token=" + key;
     }
 
     /**
