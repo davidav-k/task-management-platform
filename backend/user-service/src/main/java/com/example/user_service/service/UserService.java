@@ -1,7 +1,9 @@
 package com.example.user_service.service;
 
 import com.example.user_service.dto.User;
+import com.example.user_service.entity.CredentialEntity;
 import com.example.user_service.entity.RoleEntity;
+import com.example.user_service.entity.UserEntity;
 import com.example.user_service.enumeration.LoginType;
 
 /**
@@ -43,11 +45,17 @@ public interface UserService {
      */
     RoleEntity getRoleName(String name);
 
-    void verifyNewUserAccount(String key);
+    void verifyAccountKey(String key);
 
     void updateLoginAttempt(String email, LoginType loginType);
 
     User getUserByUserId(String apply);
+
+    User getUserByEmail(String email);
+
+    UserEntity getUserEntityByEmail(String email);
+
+    CredentialEntity getUserCredentialById(Long id);
 
 }
 

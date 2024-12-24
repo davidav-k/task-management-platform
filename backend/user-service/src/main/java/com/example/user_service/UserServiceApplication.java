@@ -21,20 +21,20 @@ public class UserServiceApplication {
 		SpringApplication.run(UserServiceApplication.class, args);
 	}
 
-	@Bean
-	CommandLineRunner commandLineRunner(RoleRepository roleRepository) {
-		return args -> {
-			RequestContext.setUserId(0L);
-			var adminRole = new RoleEntity();
-			adminRole.setName(Authority.ADMIN.name());
-			adminRole.setAuthorities(Authority.ADMIN);
-			roleRepository.save(adminRole);
-
-			var userRole = new RoleEntity();
-			userRole.setName(Authority.USER.name());
-			userRole.setAuthorities(Authority.USER);
-			roleRepository.save(userRole);
-		};
-	}
+//	@Bean
+//	CommandLineRunner commandLineRunner(RoleRepository roleRepository) {
+//		return args -> {
+//			RequestContext.setUserId(0L);
+//			var adminRole = new RoleEntity();
+//			adminRole.setName(Authority.ADMIN.name());
+//			adminRole.setAuthorities(Authority.ADMIN);
+//			roleRepository.save(adminRole);
+//
+//			var userRole = new RoleEntity();
+//			userRole.setName(Authority.USER.name());
+//			userRole.setAuthorities(Authority.USER);
+//			roleRepository.save(userRole);
+//		};
+//	}
 
 }

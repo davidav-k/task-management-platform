@@ -70,7 +70,7 @@ public class UserResource {
 
     @GetMapping("/verify/account")
     public ResponseEntity<Response> verifyNewUserAccount(@RequestParam("key") String key, HttpServletRequest request) {
-        userService.verifyNewUserAccount(key);
+        userService.verifyAccountKey(key);
         return ResponseEntity.ok().body(RequestUtils.getResponse(request, emptyMap(), "Account verified", HttpStatus.OK));
     }
 

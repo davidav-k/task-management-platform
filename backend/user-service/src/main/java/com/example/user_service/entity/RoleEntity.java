@@ -35,10 +35,6 @@ import lombok.*;
 public class RoleEntity extends Auditable {
 
     private String name;
-
-    /**
-     * These authorities determine what actions a user with this role can perform.</p>
-     */
     private Authority authorities;
 }
 

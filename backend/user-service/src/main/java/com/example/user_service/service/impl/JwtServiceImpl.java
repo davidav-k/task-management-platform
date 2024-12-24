@@ -53,6 +53,8 @@ public class JwtServiceImpl extends JwrConfig implements JwtService {
                     .parseSignedClaims(token)
                     .getPayload();
 
+    private final Function<String, String> subject = token -> getClaimsValue(token, Claims::getSubject);
+
     private final BiFunction<HttpServletRequest, String, Optional<String>> extractToken = (request, cookieName) ->
             Optional.of(stream(request.getCookies() == null ? new Cookie[]{new Cookie(EMPTY_VALUE, EMPTY_VALUE)} : request.getCookies())
                             .filter(cookie -> Objects.equals(cookieName, cookie.getName()))
@@ -119,9 +121,6 @@ public class JwtServiceImpl extends JwrConfig implements JwtService {
         return claimsFunction.andThen(claims).apply(token);
     }
 
-    private final Function<String, String> subject = token -> getClaimsValue(token, Claims::getSubject);
-
-
     public Function<String, List<GrantedAuthority>> authorities = token -> commaSeparatedStringToAuthorityList(
             new StringJoiner(AUTHORITY_DELIMITER)
                     .add(claimsFunction.apply(token).get(AUTHORITIES, String.class))
@@ -139,7 +138,7 @@ public class JwtServiceImpl extends JwrConfig implements JwtService {
 
     @Override
     public Optional<String> extractToken(HttpServletRequest request, String tokenType) {
-        return extractToken(request, tokenType);
+        return extractToken.apply(request, tokenType);
     }
 
     @Override
@@ -166,6 +165,5 @@ public class JwtServiceImpl extends JwrConfig implements JwtService {
             cookie.setMaxAge(0);
             response.addCookie(cookie);
         });
-
     }
 }

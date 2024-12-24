@@ -1,10 +1,4 @@
 
--- -- INSERT INTO roles (id, name, authorities, created_by, updated_by, created_at, updated_at)
--- -- VALUES ( 1,'ADMIN', 'ADMIN' , 0, 0, '2024-01-29 22:10:47.525634', '2024-01-29 22:10:47.524442'),
--- --        ( 2,'USER', 'USER', 0, 0, '2024-01-29 22:10:47.825602', '2024-01-29 22:10:47.800642');
--- ========================================================================================================
-
-
 -- -- Table: auditable
 -- -- This is a parent table to store common audit fields
 -- CREATE SEQUENCE IF NOT EXISTS primary_key_seq;
@@ -113,13 +107,13 @@
 --     FOR EACH ROW
 --     EXECUTE FUNCTION update_timestamp();
 
-INSERT INTO users
-(id, user_id, first_name, last_name, email, phone,
- bio, reference_id, image_url,
- created_by, updated_by, created_at, updated_at, login_attempts, account_non_expired, account_non_locked, enabled, mfa,
- qr_code_secret, qr_code_image_url)
-VALUES (0, '023a7479-e7a7-079f-3ae5-a766fe25eca9', 'System', 'System', 'system@gmail.com', '1234567890',
-        'This is not a user but the system itself', '897f3898-31ed-654a-eb93-531648a0db88',
-        'https://cdn-icons-png.flaticon.com/128/2911/2911833.png',
-        0, 0, '2024-01-29 22:10:47.925942', '2024-01-29 22:10:47.926642', 0, true, true, true, false,
-        NULL, NULL);
+INSERT INTO public.users
+(id, user_id, created_at, created_by, reference_id,
+ updated_at, updated_by, email, first_name, last_name,
+ login_attempts, phone, bio, image_url,
+ enabled, mfa, account_non_expired, account_non_locked, qr_code_image_url, qr_code_secret)
+VALUES
+    (0, '123e4567-e89b-12d3-a456-426614174000', '2024-01-29 22:10:47.925942', 0, 'system',
+     '2024-01-29 22:10:47.926642', 0, 'system@gmail.com', 'System', 'System',
+     0, '1234567890', 'This is not a user but the system itself', 'https://cdn-icons-png.flaticon.com/128/2911/2911833.png',
+     true,true, true, true, NULL, NULL);

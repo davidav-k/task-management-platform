@@ -33,89 +33,40 @@ import java.time.LocalDate;
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class UserEntity extends Auditable {
 
-    /**
-     * Unique identifier for the user.
-     */
     @Column(nullable = false, unique = true, updatable = false)
     private String userId;
 
-    /**
-     * The first name of the user.
-     */
     private String firstName;
 
-    /**
-     * The last name of the user.
-     */
     private String lastName;
 
-    /**
-     * The email address of the user. This must be unique.
-     */
     @Column(nullable = false, unique = true)
     private String email;
 
-    /**
-     * Number of failed login attempts by the user.
-     */
     private Integer loginAttempts;
 
-    /**
-     * The date and time of the user's last login.
-     */
     private LocalDate lastLogin;
 
-    /**
-     * The phone number of the user.
-     */
     private String phone;
 
-    /**
-     * A short biography or description of the user.
-     */
     private String bio;
 
-    /**
-     * URL of the user's profile image.
-     */
     private String imageUrl;
 
-    /**
-     * Indicates whether the user's account is non-expired.
-     */
     private boolean accountNonExpired;
 
-    /**
-     * Indicates whether the user's account is non-locked.
-     */
     private boolean accountNonLocked;
 
-    /**
-     * Indicates whether the user's account is enabled.
-     */
     private boolean enabled;
 
-    /**
-     * Indicates whether multi-factor authentication (MFA) is enabled for the user.
-     */
     private boolean mfa;
 
-    /**
-     * The secret used for generating MFA QR codes. Excluded from JSON serialization.
-     */
     @JsonIgnore
     private String qrCodeSecret;
 
-    /**
-     * The URL of the QR code image used for multifactorial authentication.
-     */
     @Column(columnDefinition = "text")
     private String qrCodeImageUrl;
 
-    /**
-     * The role assigned to the user.
-     * This is a many-to-one relationship with the RoleEntity.
-     */
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",

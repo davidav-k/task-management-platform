@@ -2,6 +2,7 @@ package com.example.user_service.domain;
 
 import com.example.user_service.dto.User;
 import com.example.user_service.exception.ApiException;
+import lombok.Getter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
@@ -13,7 +14,9 @@ public class ApiAuthentication extends AbstractAuthenticationToken {
     private static final String EMAIL_PROTECTED = "[EMAIL PROTECTED]";
     private static final String PASSWORD_PROTECTED = "[PASSWORD_PROTECTED]";
     private User user;
+    @Getter
     private String email;
+    @Getter
     private String password;
     private boolean authenticated;
 
@@ -60,11 +63,4 @@ public class ApiAuthentication extends AbstractAuthenticationToken {
         return this.authenticated;
     }
 
-    public String getPassword() {
-        return this.password;
-    }
-
-    public String getEmail() {
-        return this.email;
-    }
 }

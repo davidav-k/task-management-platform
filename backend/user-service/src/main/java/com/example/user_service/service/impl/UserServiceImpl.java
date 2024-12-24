@@ -79,7 +79,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public void createUser(String firstName, String lastName, String email, String password) {
-        UserEntity userEntity = createNewUser(firstName, lastName, email);
+        UserEntity userEntity = userRepository.save(createNewUser(firstName, lastName, email));
         CredentialEntity credentialEntity = new CredentialEntity(userEntity, password);
         credentialRepository.save(credentialEntity);
         var confirmationEntity = new ConfirmationEntity(userEntity);
@@ -87,16 +87,11 @@ public class UserServiceImpl implements UserService {
         publisher.publishEvent(new UserEvent(userEntity, EventType.REGISTRATION, Map.of("key", confirmationEntity.getKey())));
     }
 
-    /**
-     * Retrieves a RoleEntity by its name.
-     *
-     * <p>This method finds and returns a RoleEntity that matches the provided role name.
-     * If no role is found, an ApiException is thrown.</p>
-     *
-     * @param name the name of the role to search for
-     * @return the RoleEntity corresponding to the specified role name
-     * @throws ApiException if the role is not found
-     */
+    private UserEntity createNewUser(String firstName, String lastName, String email) {
+        RoleEntity role = getRoleName(Authority.USER.name());
+        return UserUtils.createUserEntity(firstName, lastName, email, role);
+    }
+
     @Override
     public RoleEntity getRoleName(String name) {
         return roleRepository.findByNameIgnoreCase(name)
@@ -104,67 +99,67 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void verifyNewUserAccount(String key) {
-        ConfirmationEntity confirmationEntity = confirmationRepository.findByKey(key)
-                .orElseThrow(() -> new ApiException("Invalid key"));
-        UserEntity userEntity = userRepository.findByEmailIgnoreCase(confirmationEntity.getUserEntity().getEmail())
-                .orElseThrow(() -> new ApiException("User not found"));
+    public void verifyAccountKey(String key) {
+        ConfirmationEntity confirmationEntity = getUserConfirmation(key);
+        UserEntity userEntity = getUserEntityByEmail(confirmationEntity.getUserEntity().getEmail());;
         userEntity.setEnabled(true);
         userRepository.save(userEntity);
         confirmationRepository.delete(confirmationEntity);
     }
 
+    private ConfirmationEntity getUserConfirmation(String key) {
+        return confirmationRepository.findByKey(key)
+                .orElseThrow(() -> new ApiException("Invalid key"));
+    }
+
     @Override
     public void updateLoginAttempt(String email, LoginType loginType) {
-        UserEntity userByEmail = getUserByEmail(email);
-        RequestContext.setUserId(userByEmail.getId());
+        UserEntity userEntity = getUserEntityByEmail(email);
+        RequestContext.setUserId(userEntity.getId());
         switch (loginType) {
             case LOGIN_ATTEMPT -> {
-                if (userCache.get(userByEmail.getEmail()) == null) {
-                    userByEmail.setLoginAttempts(0);
-                    userByEmail.setAccountNonLocked(true);
+                if (userCache.get(userEntity.getEmail()) == null) {
+                    userEntity.setLoginAttempts(0);
+                    userEntity.setAccountNonLocked(true);
                 }
-                userByEmail.setLoginAttempts(userByEmail.getLoginAttempts() + 1);
-                userCache.put(userByEmail.getEmail(), userByEmail.getLoginAttempts());
-                if (userCache.get(userByEmail.getEmail()) > 5) {
-                    userByEmail.setAccountNonLocked(false);
-
+                userEntity.setLoginAttempts(userEntity.getLoginAttempts() + 1);
+                userCache.put(userEntity.getEmail(), userEntity.getLoginAttempts());
+                if (userCache.get(userEntity.getEmail()) > 5) {
+                    userEntity.setAccountNonLocked(false);
                 }
             }
             case LOGIN_SUCCESS -> {
-                userByEmail.setAccountNonLocked(true);
-                userByEmail.setLoginAttempts(0);
-                userByEmail.setLastLogin(now());
-                userCache.evict(userByEmail.getEmail());
+                userEntity.setAccountNonLocked(true);
+                userEntity.setLoginAttempts(0);
+                userEntity.setLastLogin(now());
+                userCache.evict(userEntity.getEmail());
             }
-
         }
-        userRepository.save(userByEmail);
-
+        userRepository.save(userEntity);
     }
 
-    private UserEntity getUserByEmail(String email) {
+    @Override
+    public UserEntity getUserEntityByEmail(String email) {
         return userRepository.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new ApiException("User not found"));
+                .orElseThrow(() -> new ApiException("User by email not found"));
     }
 
-    public User getUserByUserId(String userId) {return null;}
+    @Override
+    public User getUserByUserId(String userId) {
+        UserEntity userEntity = userRepository.findUserByUserId(userId).orElseThrow(() -> new ApiException("User by user id not found"));
+        return UserUtils.fromUserEntity(userEntity, userEntity.getRole(),getUserCredentialById(userEntity.getId()));
+    }
 
-    /**
-     * Creates a new UserEntity with the specified details.
-     *
-     * <p>This method retrieves the default "USER" role and creates a new UserEntity
-     * using the provided first name, last name, and email. The UserEntity is not
-     * saved in the database by this method.</p>
-     *
-     * @param firstName the first name of the user
-     * @param lastName  the last name of the user
-     * @param email     the email address of the user
-     * @return the newly created UserEntity
-     */
-    private UserEntity createNewUser(String firstName, String lastName, String email) {
-        var role = getRoleName(Authority.USER.name());
-        return UserUtils.createUserEntity(firstName, lastName, email, role);
+    @Override
+    public User getUserByEmail(String email) {
+        UserEntity userEntity = getUserEntityByEmail(email);
+        return UserUtils.fromUserEntity(userEntity, userEntity.getRole(),getUserCredentialById(userEntity.getId()));
+    }
+
+    @Override
+    public CredentialEntity getUserCredentialById(Long userId) {
+        return credentialRepository.getCredentialByUserEntityId(userId)
+                .orElseThrow(() -> new ApiException("Unable to find user credential"));
     }
 }
 

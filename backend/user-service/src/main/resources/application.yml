@@ -30,9 +30,7 @@ spring:
     init:
       mode: never
       continue-on-error: false
-#      schema-locations: classpath:/data/schema.sql
-#      data-locations: classpath:/data/db_init.sql
-      data-locations: classpath:/data/data.sql
+      data-locations: classpath:/data/db_init.sql
   servlet:
     multipart:
       enabled: true

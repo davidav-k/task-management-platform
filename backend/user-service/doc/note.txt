@@ -1,44 +1,22 @@
-Запуск
-    подготовка:
-        application.yml:
-          sql:
-            init:
-              mode: never
-        UserServiceApplication.java:
-            Been on
-                @Bean
-                CommandLineRunner commandLineRunner(RoleRepository roleRepository)
-
-docker-compose up -d
-
-Запускаем приложение и видим что в БД созданы таблицы и в таблицу roles добавлены 2 записи ADMIN и USER из-за того
-что в UserServiceApplication.java указано создание бина, который вносит параметры ролей в БД при старте приложения
-
-Останавливаем приложение
-
-    подготовка:
-        application.yml:
-          sql:
-            init:
-                mode: always
-            UserServiceApplication.java:
-                Been off
-                    //	@Bean
-                    //	CommandLineRunner commandLineRunner(RoleRepository roleRepository) {
-                    //	этот бин необходим для первоначального создания ролей в базе данных и используется только один раз
-
-Запускаем приложение и видим что в таблицу user добавлена 1 запись SYSTEM c id = 0 из-за того
- что в application.yml указано что при каждом запуске приложения будет происходить инициализация базы данных с помощью файла  data.sql
-
-Останавливаем приложение
-
-рабочие настройки
-            application.yml:
-            sql:
-                init:
-                    mode: never
-                UserServiceApplication.java:
-                    Been off
-                        //	@Bean
-                        //	CommandLineRunner commandLineRunner(RoleRepository roleRepository) {
-                        //	этот бин необходим для первоначального создания ролей в базе данных и используется только один раз
+======================================================================================
+Первый запуск приложения
+0. Удалить все контейнеры и volumes
+1. Из папки docker запустить в терминале 'docker compose up -d'
+происходит сборка и запуск контейнеров с базой данных и админкой
+2. Включаем инициализацию БД:
+application.yml:
+      sql:
+        init:
+            mode: always
+3. Запускаем приложение:
+происходит инициализация базы данных с помощью файла db_init.sql
+- создаются таблицы users, roles, user_roles, credentials, confirmations
+- в таблицу users добавлен пользователь SYSTEM c id = 0
+- в таблицу roles добавлены роли ADMIN и USER c id = 1 и 2 соответственно
+4. Останавливаем приложение
+5. Выключаем инициализацию БД
+application.yml:
+    sql:
+        init:
+            mode: never
+======================================================================================
