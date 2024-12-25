@@ -15,40 +15,18 @@ package com.example.user_service.domain;
  */
 public class RequestContext {
 
-    /**
-     * Thread-local variable to store the user ID for the current thread.
-     */
     private static final ThreadLocal<Long> USER_ID = new ThreadLocal<>();
 
-    /**
-     * Private constructor to prevent instantiation of this utility class.
-     */
     private RequestContext() {}
 
-    /**
-     * Clears the user ID from the thread-local storage.
-     *
-     * <p>This method is called at the start of a request to ensure no residual user ID
-     * is left in the thread-local variable from a previous request.</p>
-     */
     private static void start() {
         USER_ID.remove();
     }
 
-    /**
-     * Sets the user ID in the thread-local storage for the current thread.
-     *
-     * @param userId the user ID to be associated with the current thread
-     */
     public static void setUserId(Long userId) {
         USER_ID.set(userId);
     }
 
-    /**
-     * Retrieves the user ID associated with the current thread.
-     *
-     * @return the user ID for the current thread, or {@code null} if no user ID is set
-     */
     public static Long getUserId() {
         return USER_ID.get();
     }

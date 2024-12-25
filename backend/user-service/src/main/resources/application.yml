@@ -76,3 +76,7 @@ server:
 jwt:
   expiration: ${JWT_EXPIRATION}
   secret: ${JWT_SECRET}
+
+api:
+  endpoint:
+    base-url: ${BASE_URL}

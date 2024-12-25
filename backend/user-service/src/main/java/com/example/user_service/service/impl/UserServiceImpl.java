@@ -29,29 +29,6 @@ import java.util.Map;
 
 import static java.time.LocalDate.now;
 
-/**
- * Implementation of the UserService interface for handling user-related business logic.
- *
- * <p>This class provides methods to create users, retrieve roles, and handle user-related
- * operations. It works with multiple repositories, including UserRepository, RoleRepository,
- * CredentialRepository, and ConfirmationRepository, to persist and manage user data.
- * Events are published using the ApplicationEventPublisher to notify other parts of
- * the application of user-related events.</p>
- *
- * <p>Annotations used:</p>
- * <ul>
- *   <li>{@code @Service} - Marks this class as a Spring service component, enabling dependency injection.</li>
- *   <li>{@code @Transactional(rollbackOn = Exception.class)} - Ensures that database operations are transactional and rolls back on any exception.</li>
- *   <li>{@code @RequiredArgsConstructor} - Generates a constructor with required arguments for all final fields.</li>
- *   <li>{@code @Slf4j} - Provides a logger for logging error messages and other important information.</li>
- * </ul>
- *
- * <p>Usage example:</p>
- * <pre>
- *     userService.createUser("John", "Doe", "john.doe@example.com", "password123");
- *     RoleEntity role = userService.getRoleName("ADMIN");
- * </pre>
- */
 @Service
 @Transactional(rollbackOn = Exception.class)
 @RequiredArgsConstructor
@@ -65,18 +42,6 @@ public class UserServiceImpl implements UserService {
     private final ApplicationEventPublisher publisher;
     private final CacheStore<String, Integer> userCache;
 
-    /**
-     * Creates a new user with the specified details.
-     *
-     * <p>This method creates a new UserEntity and its associated CredentialEntity and
-     * ConfirmationEntity. It also publishes a UserEvent to notify other components
-     * that a new user has been registered.</p>
-     *
-     * @param firstName the first name of the user
-     * @param lastName  the last name of the user
-     * @param email     the email address of the user
-     * @param password  the password for the user account
-     */
     @Override
     public void createUser(String firstName, String lastName, String email, String password) {
         UserEntity userEntity = userRepository.save(createNewUser(firstName, lastName, email));
@@ -88,7 +53,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private UserEntity createNewUser(String firstName, String lastName, String email) {
-        RoleEntity role = getRoleName(Authority.USER.name());
+        RoleEntity role = getRoleName(Authority.USER.name());//todo: change to user
         return UserUtils.createUserEntity(firstName, lastName, email, role);
     }
 

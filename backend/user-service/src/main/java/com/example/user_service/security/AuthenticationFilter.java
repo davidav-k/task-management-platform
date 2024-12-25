@@ -1,5 +1,6 @@
 package com.example.user_service.security;
 
+import com.example.user_service.domain.RequestContext;
 import com.example.user_service.domain.dto.request.LoginRequest;
 import com.example.user_service.dto.User;
 import com.example.user_service.enumeration.LoginType;
@@ -47,8 +48,9 @@ public class AuthenticationFilter extends AbstractAuthenticationProcessingFilter
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException, IOException, ServletException {
         log.info("Attempting authentication");
         try {
-            var user = new ObjectMapper().configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true).readValue(request.getInputStream(), LoginRequest.class);
-            userService.updateLoginAttempt(user.getEmail(), LoginType.LOGIN_ATTEMPT);
+            LoginRequest loginRequest = new ObjectMapper().configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true)
+                    .readValue(request.getInputStream(), LoginRequest.class);
+            userService.updateLoginAttempt(loginRequest.getEmail(), LoginType.LOGIN_ATTEMPT);
 
         } catch (Exception ex) {
             log.error(ex.getMessage());
@@ -73,7 +75,7 @@ public class AuthenticationFilter extends AbstractAuthenticationProcessingFilter
 
     private Object sendResponse(HttpServletRequest request, HttpServletResponse response, User user) {
         jwtService.addCookie(response, user, TokenType.ACCESS);
-        jwtService.addCookie(response,user, TokenType.REFRESH);
+        jwtService.addCookie(response, user, TokenType.REFRESH);
         return getResponse(request, Map.of("user", user), "Login successful", OK);
     }
 
