@@ -1,5 +1,7 @@
 package com.example.user_service.utils;
 
+import org.springframework.beans.factory.annotation.Value;
+
 /**
  * Utility class for generating email message content for user notifications.
  *
@@ -14,6 +16,11 @@ package com.example.user_service.utils;
  * </pre>
  */
 public class EmailUtils {
+
+
+    @Value("${api.endpoint.base-url}")
+    private static String baseUrl;
+
 
     /**
      * Generates an email message for new user account verification.
@@ -61,7 +68,7 @@ public class EmailUtils {
      * @return the fully constructed URL for account verification
      */
     private static String getVerificationUrl(String host, String key) {
-        return host + "/verify/account?token=" + key;
+        return host + baseUrl + "/verify/account?token=" + key;
     }
 
     /**
@@ -76,7 +83,7 @@ public class EmailUtils {
      * @return the fully constructed URL for password reset
      */
     private static String getResetPasswordUrl(String host, String token) {
-        return host + "/verify/password?token=" + token;
+        return host + baseUrl + "/verify/password?token=" + token;
     }
 }
 

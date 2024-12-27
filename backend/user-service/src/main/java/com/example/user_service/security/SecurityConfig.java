@@ -38,7 +38,7 @@ public class SecurityConfig {
         return http
                 .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
                         .requestMatchers(HttpMethod.POST, baseUrl + "/user/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, baseUrl + "/user/verify/account").permitAll()
+                        .requestMatchers(HttpMethod.GET, baseUrl + "/user/verify/**").permitAll()
                         .requestMatchers(HttpMethod.POST, baseUrl + "/user/register").permitAll()
 //                        .requestMatchers(HttpMethod.GET, baseUrl + "/user/**").access(userRequestAuthorizationManager)
 //                        .requestMatchers(HttpMethod.POST, baseUrl + "/user").hasAuthority("ROLE_ADMIN")
