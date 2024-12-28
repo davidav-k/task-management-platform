@@ -18,6 +18,8 @@ public class Constants {
 
     public static final String LOGIN_PATH = "/user/login";
 
+    public static final String BASE_URL_PATH = "/api/v1";
+
     public static final String EMPTY_VALUE = "empty";
 
     public static final String AUTHORITIES = "authorities";

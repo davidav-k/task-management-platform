@@ -1,6 +1,6 @@
 package com.example.user_service.utils;
 
-import org.springframework.beans.factory.annotation.Value;
+import static com.example.user_service.constant.Constants.BASE_URL_PATH;
 
 /**
  * Utility class for generating email message content for user notifications.
@@ -9,18 +9,8 @@ import org.springframework.beans.factory.annotation.Value;
  * users about events like account verification and password reset requests. The
  * messages include URLs that guide users to the appropriate action page.</p>
  *
- * <p>Usage example:</p>
- * <pre>
- *     String message = EmailUtils.getEmailMessage("John", "https://example.com", "verificationToken");
- *     String resetMessage = EmailUtils.getResetPasswordMessage("John", "https://example.com", "resetToken");
- * </pre>
  */
 public class EmailUtils {
-
-
-    @Value("${api.endpoint.base-url}")
-    private static String baseUrl;
-
 
     /**
      * Generates an email message for new user account verification.
@@ -68,7 +58,7 @@ public class EmailUtils {
      * @return the fully constructed URL for account verification
      */
     private static String getVerificationUrl(String host, String key) {
-        return host + baseUrl + "/verify/account?token=" + key;
+        return host + BASE_URL_PATH + "/user/verify/account?key=" + key;
     }
 
     /**
@@ -83,7 +73,7 @@ public class EmailUtils {
      * @return the fully constructed URL for password reset
      */
     private static String getResetPasswordUrl(String host, String token) {
-        return host + baseUrl + "/verify/password?token=" + token;
+        return host + BASE_URL_PATH + "/user/verify/password?key=" + token;
     }
 }
 

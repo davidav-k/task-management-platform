@@ -3,6 +3,7 @@ package com.example.user_service.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -41,6 +42,7 @@ public class UserEntity extends Auditable {
     private String lastName;
 
     @Column(nullable = false, unique = true)
+    @Email
     private String email;
 
     private Integer loginAttempts;
