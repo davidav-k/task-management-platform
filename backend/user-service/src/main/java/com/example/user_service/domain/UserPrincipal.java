@@ -10,11 +10,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 
+@Getter
 @RequiredArgsConstructor
 public class UserPrincipal implements UserDetails {
-    @Getter
+
     private final User user;
-    @Getter
     private final CredentialEntity credentialEntity;
 
 

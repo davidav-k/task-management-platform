@@ -1,7 +1,6 @@
 package com.example.user_service.constant;
 /**
- * Utility class that defines application-wide constants used for roles, authorities,
- * and access control.
+ * Utility class that defines application-wide constants
  *
  * <p>This class contains static final fields that are used throughout the application
  * for defining role prefixes, delimiters, and specific authorities for different user
@@ -27,9 +26,12 @@ public class Constants {
     public static final String ROLE = "role";
 
     public static final String ROLE_PREFIX = "ROLE_";
-    public static final int NINETY_DAYS = 90;
-    public static final int STRENGTH = 12;
 
+    public static final int NINETY_DAYS = 90;
+
+    public static final int EXPIRE_DURATION = 900;
+
+    public static final int STRENGTH = 12;
 
     public static final String GET_ARRAYS_LLC = "GET_ARRAYS_LLC";
 

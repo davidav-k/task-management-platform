@@ -1,4 +1,4 @@
-package com.example.user_service.domain.dto.request;
+package com.example.user_service.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.Email;
@@ -15,6 +15,7 @@ public class LoginRequest {
     @Email(message = "Invalid email address")
     private String email;
 
+// Todo: policy
     @NotEmpty(message = "Password cannot be empty or null")
     private String password;
 }

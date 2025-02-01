@@ -5,12 +5,14 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.example.user_service.constant.Constants.EXPIRE_DURATION;
+
 @Configuration
 public class CacheConfig {
 
     @Bean(name = "userLoginCache")
     public CacheStore<String, Integer> cacheStore() {
-        return new CacheStore<>(900, TimeUnit.SECONDS);
+        return new CacheStore<>(EXPIRE_DURATION, TimeUnit.SECONDS);
     }
 
 }

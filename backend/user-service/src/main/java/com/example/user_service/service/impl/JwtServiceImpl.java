@@ -129,7 +129,7 @@ public class JwtServiceImpl extends JwrConfig implements JwtService {
 
     @Override
     public String createToken(User user, Function<Token, String> tokenFunction) {
-        var token = Token.builder()
+        Token token = Token.builder()
                 .access(buildToken.apply(user, ACCESS))
                 .refresh(buildToken.apply(user, REFRESH))
                 .build();

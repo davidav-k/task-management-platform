@@ -1,32 +1,113 @@
 package com.example.user_service.exception;
 
-import jakarta.persistence.EntityNotFoundException;
+import com.example.user_service.domain.Response;
+import com.example.user_service.exception.ApiException;
+import com.example.user_service.utils.RequestUtils;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AccountStatusException;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.InsufficientAuthenticationException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.validation.FieldError;
-import org.springframework.validation.ObjectError;
-import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class ExceptionHandlerAdvice {
 
-    @ExceptionHandler(EntityNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    ResponseEntity handleEntityNotFoundException(EntityNotFoundException ex) {
-        return ResponseEntity.notFound();
+    @ExceptionHandler(ApiException.class)
+    public Response handleApiException(ApiException ex, HttpServletRequest request) {
+        return RequestUtils.getResponse(request, Map.of(), ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public Response handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        Map<String, String> errors = ex.getBindingResult().getFieldErrors().stream()
+                .collect(Collectors.toMap(
+                        fieldError -> fieldError.getField(),
+                        fieldError -> fieldError.getDefaultMessage(),
+                        (existingValue, newValue) -> existingValue));
+        return RequestUtils.getResponse(request, errors, "Provided arguments are not valid", HttpStatus.BAD_REQUEST);
+    }
+
+
+
+    //    @ExceptionHandler(MethodArgumentNotValidException.class)
+//    @ResponseStatus(HttpStatus.BAD_REQUEST)
+//    Result handleValidationException(MethodArgumentNotValidException ex){
+//        List<ObjectError> errors = ex.getBindingResult().getAllErrors();
+//        Map<String, String> map = new HashMap<>(errors.size());
+//        errors.forEach((error) -> {
+//            String key = ((FieldError) error).getField();
+//            String val = error.getDefaultMessage();
+//            map.put(key, val);
+//        });
+//
+//        return new Result(false, StatusCode.INVALID_ARGUMENT, "Provided arguments are not valid", map);
+//    }
+
+
+
+
+
+
+
+
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public Response handleConstraintViolationException(ConstraintViolationException ex, HttpServletRequest request) {
+        Map<String, String> errors = ex.getConstraintViolations().stream()
+                .collect(Collectors.toMap(
+                        violation -> violation.getPropertyPath().toString(),
+                        violation -> violation.getMessage()));
+        return RequestUtils.getResponse(request, errors, "Constraint violation", HttpStatus.BAD_REQUEST);
+    }
+
+
+    @ExceptionHandler(Exception.class)
+    public Response handleGenericException(Exception ex, HttpServletRequest request) {
+        return RequestUtils.getResponse(request, Map.of("error", ex.getMessage()), "An unexpected error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+//import jakarta.persistence.EntityNotFoundException;
+//import org.springframework.http.HttpStatus;
+//import org.springframework.http.ResponseEntity;
+//import org.springframework.security.authentication.AccountStatusException;
+//import org.springframework.security.authentication.BadCredentialsException;
+//import org.springframework.security.authentication.InsufficientAuthenticationException;
+//import org.springframework.security.core.userdetails.UsernameNotFoundException;
+//import org.springframework.validation.FieldError;
+//import org.springframework.validation.ObjectError;
+//import org.springframework.web.HttpMediaTypeNotSupportedException;
+//import org.springframework.web.bind.MethodArgumentNotValidException;
+//import org.springframework.web.bind.annotation.ExceptionHandler;
+//import org.springframework.web.bind.annotation.ResponseStatus;
+//import org.springframework.web.bind.annotation.RestControllerAdvice;
+//
+//import java.util.HashMap;
+//import java.util.List;
+//import java.util.Map;
+//
+//@RestControllerAdvice
+//public class ExceptionHandlerAdvice {
+//
+////    @ExceptionHandler(EntityNotFoundException.class)
+//    @ResponseStatus(HttpStatus.NOT_FOUND)
+//    ResponseEntity handleEntityNotFoundException(EntityNotFoundException ex) {
+//        return ResponseEntity.notFound();
+//    }
 
 //    @ExceptionHandler(IllegalAccessException.class)
 //    @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -110,4 +191,4 @@ public class ExceptionHandlerAdvice {
 //    DataIntegrityViolationException
 //    ConstraintDefinitionException
 //    IllegalArgumentException
-}
+//}

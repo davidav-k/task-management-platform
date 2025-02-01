@@ -3,6 +3,7 @@ package com.example.user_service.utils;
 import com.example.user_service.domain.Response;
 import com.example.user_service.exception.ApiException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
@@ -39,7 +40,7 @@ public class RequestUtils {
 
     private static final BiConsumer<HttpServletResponse, Response> writeResponse = (httpServletResponse, response) -> {
         try {
-            var outputStream = httpServletResponse.getOutputStream();
+            ServletOutputStream outputStream = httpServletResponse.getOutputStream();
             new ObjectMapper().writeValue(outputStream, response);
             outputStream.flush();
         } catch (Exception exception) {
@@ -54,7 +55,11 @@ public class RequestUtils {
         if (httpStatus.isSameCodeAs(UNAUTHORIZED)) {
             return "You are not logged in";
         }
-        if (exception instanceof DisabledException || exception instanceof LockedException || exception instanceof BadCredentialsException || exception instanceof CredentialsExpiredException || exception instanceof ApiException) {
+        if (exception instanceof DisabledException ||
+                exception instanceof LockedException ||
+                exception instanceof BadCredentialsException ||
+                exception instanceof CredentialsExpiredException ||
+                exception instanceof ApiException) {
             return exception.getMessage();
         }
         if ( httpStatus.is5xxServerError()) {
@@ -78,7 +83,8 @@ public class RequestUtils {
      * @return a Response object containing all the provided response details
      */
     public static Response getResponse(HttpServletRequest request, Map<?, ?> data, String message, HttpStatus status) {
-        return new Response(LocalDateTime.now().toString(),
+        return new Response(
+                LocalDateTime.now().toString(),
                 status.value(),
                 request.getRequestURI(),
                 HttpStatus.valueOf(status.value()),
@@ -87,9 +93,9 @@ public class RequestUtils {
                 data);
     }
 
-    public static void handlerErrorResponse(HttpServletRequest request, HttpServletResponse response, Exception eexception) {
-        if (eexception instanceof AccessDeniedException) {
-            var apiResponse = getErrorResponse(request, response, eexception, FORBIDDEN);
+    public static void handlerErrorResponse(HttpServletRequest request, HttpServletResponse response, Exception exception) {
+        if (exception instanceof AccessDeniedException) {
+            Response apiResponse = getErrorResponse(request, response, exception, FORBIDDEN);
             writeResponse.accept(response, apiResponse);
 
         }
@@ -98,7 +104,8 @@ public class RequestUtils {
     private static Response getErrorResponse(HttpServletRequest request, HttpServletResponse response, Exception exception, HttpStatus status) {
         response.setContentType(APPLICATION_JSON_VALUE);
         response.setStatus(status.value());
-        return new Response(LocalDateTime.now().toString(),
+        return new Response(
+                LocalDateTime.now().toString(),
                 status.value(),
                 request.getRequestURI(),
                 HttpStatus.valueOf(status.value()),

@@ -52,7 +52,7 @@ public class ApiAuthenticationProvider implements AuthenticationProvider {
             throw new ApiException("Unable to authenticate user");
         }
         var userCredential = userService.getUserCredentialById(user.getId());
-//        TODO: Uncomment this code to enable password expiry
+//        TODO: enable password expiry
 //        if (userCredential.getUpdatedAt().minusDays(NINETY_DAYS).isAfter(LocalDateTime.now())){
 //            throw new ApiException("Password expired. Please reset your password");
 //        }

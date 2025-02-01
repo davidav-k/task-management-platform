@@ -1,7 +1,6 @@
 package com.example.user_service.security;
 
-import com.example.user_service.domain.RequestContext;
-import com.example.user_service.domain.dto.request.LoginRequest;
+import com.example.user_service.dto.LoginRequest;
 import com.example.user_service.dto.User;
 import com.example.user_service.enumeration.LoginType;
 import com.example.user_service.enumeration.TokenType;

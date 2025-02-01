@@ -1,6 +1,7 @@
 package com.example.user_service.service.impl;
 
 import com.example.user_service.cache.CacheStore;
+import com.example.user_service.domain.ApiAuthentication;
 import com.example.user_service.domain.RequestContext;
 import com.example.user_service.dto.User;
 import com.example.user_service.entity.ConfirmationEntity;
@@ -22,6 +23,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 
@@ -41,6 +44,7 @@ public class UserServiceImpl implements UserService {
     private final ConfirmationRepository confirmationRepository;
     private final ApplicationEventPublisher publisher;
     private final CacheStore<String, Integer> userCache;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     @Override
     public void createUser(String firstName, String lastName, String email, String password) {
@@ -53,7 +57,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private UserEntity createNewUser(String firstName, String lastName, String email) {
-        RoleEntity role = getRoleName(Authority.USER.name());//todo: change to user
+        RoleEntity role = getRoleName(Authority.USER.name());
         return UserUtils.createUserEntity(firstName, lastName, email, role);
     }
 
@@ -126,5 +130,25 @@ public class UserServiceImpl implements UserService {
         return credentialRepository.getCredentialByUserEntityId(userId)
                 .orElseThrow(() -> new ApiException("Unable to find user credential"));
     }
+
+    @Override
+    public ApiAuthentication authenticateUser(String email, String password) {
+//        UserEntity userEntity = getUserEntityByEmail(email);
+//        CredentialEntity credential = credentialRepository.getCredentialByUserEntityId(userEntity.getId())
+//                .orElseThrow(() -> new ApiException("Invalid credentials"));
+//
+//        if (!passwordEncoder.matches(password, credential.getPassword())) {
+//            throw new ApiException("Invalid email or password");
+//        }
+//
+//        return ApiAuthentication.authenticated(
+//                UserUtils.fromUserEntity(userEntity, userEntity.getRole(), credential),
+//                AuthorityUtils.commaSeparatedStringToAuthorityList(String.valueOf(userEntity.getRole().getAuthorities()))
+//        );
+        return null;
+    }
+
+
+
 }
 

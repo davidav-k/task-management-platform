@@ -1,10 +1,14 @@
 package com.example.user_service.service;
 
+import com.example.user_service.domain.ApiAuthentication;
 import com.example.user_service.dto.User;
 import com.example.user_service.entity.CredentialEntity;
 import com.example.user_service.entity.RoleEntity;
 import com.example.user_service.entity.UserEntity;
 import com.example.user_service.enumeration.LoginType;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotEmpty;
+import org.springframework.security.core.Authentication;
 
 /**
  * Service interface for handling user-related operations.
@@ -25,13 +29,7 @@ public interface UserService {
      * Creates a new user with the specified details.
      *
      * <p>This method creates a user with the provided first name, last name, email,
-     * and password. The created user may be stored in a database or an external
-     * system depending on the implementation.</p>
-     *
-     * @param firstName the first name of the user
-     * @param lastName the last name of the user
-     * @param email the email address of the user
-     * @param password the password for the user account
+     * and password. The created user stored in a database</p>
      */
     void createUser(String firstName, String lastName, String email, String password);
 
@@ -57,5 +55,6 @@ public interface UserService {
 
     CredentialEntity getUserCredentialById(Long id);
 
+    ApiAuthentication authenticateUser(String email, String password);
 }
 

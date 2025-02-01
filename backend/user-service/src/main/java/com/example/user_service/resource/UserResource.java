@@ -1,63 +1,84 @@
 package com.example.user_service.resource;
 
 import com.example.user_service.domain.Response;
-import com.example.user_service.domain.dto.request.UserRequest;
+import com.example.user_service.dto.LoginRequest;
+import com.example.user_service.dto.UserRequest;
+import com.example.user_service.dto.User;
+import com.example.user_service.enumeration.TokenType;
+import com.example.user_service.service.JwtService;
 import com.example.user_service.service.UserService;
 import com.example.user_service.utils.RequestUtils;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.Map;
 
 import static java.util.Collections.emptyMap;
 
+@Slf4j
 @RestController
 @RequestMapping(path = "${api.endpoint.base-url}/user")
 @RequiredArgsConstructor
 public class UserResource {
 
     private final UserService userService;
+    private final JwtService jwtService;
 
-    @PostMapping("/register")
-    public ResponseEntity<Response> saveUser(@RequestBody @Valid UserRequest user, HttpServletRequest request) {
-        userService.createUser(user.getFirstName(), user.getLastName(), user.getEmail(), user.getPassword());
-        return ResponseEntity.created(getUri()).body(RequestUtils.getResponse(
-                request,
-                emptyMap(),
-                "Account created. Check your email to enable your account",
-                HttpStatus.CREATED));
-    }
-
-    @GetMapping("/verify/account")
-    public ResponseEntity<Response> verifyNewUserAccount(@RequestParam("key") String key, HttpServletRequest request) {
-        userService.verifyAccountKey(key);
-        return ResponseEntity.ok().body(RequestUtils.getResponse(
-                request,
-                emptyMap(),
-                "Account verified",
-                HttpStatus.OK));
-    }
-
-//    @PostMapping("/login")
-//    public ResponseEntity<Response> loginUser(@RequestBody @Valid LoginRequest loginRequest, HttpServletRequest request, HttpServletResponse response) {
-//        var authentication = userService.authenticateUser(loginRequest.getEmail(), loginRequest.getPassword());
-//        jwtService.addCookie(response, authentication.getUser(), TokenType.ACCESS);
-//        jwtService.addCookie(response, authentication.getUser(), TokenType.REFRESH);
-//        return ResponseEntity.ok().body(RequestUtils.getResponse(request, Map.of("user", authentication.getUser()), "Login successful.", HttpStatus.OK));
-//    }
 
     private URI getUri() {
         return URI.create("");
     }
 
-//    private final JwtService jwtService;
+    @PostMapping("/register")
+    public ResponseEntity<Response> saveUser(@RequestBody @Valid UserRequest userRequest, HttpServletRequest request) {
+        log.info("Creating new user with email: {}", userRequest.getEmail());
+        userService.createUser(userRequest.getFirstName(), userRequest.getLastName(), userRequest.getEmail(), userRequest.getPassword());
+        log.info("Account created successfully: {}", userRequest.getEmail());
+        return ResponseEntity.created(getUri()).body(RequestUtils.getResponse(
+                        request,
+                        emptyMap(),
+                        "Account created. Check your email to enable your account",
+                        HttpStatus.CREATED));
+    }
 
-//
+    @GetMapping("/verify/account")
+    public ResponseEntity<Response> verifyNewUserAccount(@RequestParam("key") String key, HttpServletRequest request) {
+        log.info("Verifying account with key: {}", key);
+        userService.verifyAccountKey(key);
+        log.info("Account verified successfully for key: {}", key);
+        return ResponseEntity.ok().body(RequestUtils.getResponse(
+                        request,
+                        emptyMap(),
+                        "Account verified successfully.",
+                        HttpStatus.OK));
+    }
+
+
+
+
+
+    @PostMapping("/login")
+    public ResponseEntity<Response> loginUser(@RequestBody @Valid LoginRequest loginRequest, HttpServletRequest request, HttpServletResponse response) {
+        log.info("Logging in user with email: {}", loginRequest.getEmail());
+        Authentication authentication = userService.authenticateUser(loginRequest.getEmail(), loginRequest.getPassword());
+        log.info("User logged in successfully with email: {}", loginRequest.getEmail());
+        jwtService.addCookie(response, (User) authentication.getPrincipal(), TokenType.ACCESS);
+        jwtService.addCookie(response, (User) authentication.getPrincipal(), TokenType.REFRESH);
+        return ResponseEntity.ok().body(RequestUtils.getResponse(
+                request,
+                Map.of("user", (User) authentication.getPrincipal()),
+                "Login successful.",
+                HttpStatus.OK));
+    }
+
 //    @GetMapping("/profile")
 //    public ResponseEntity<Response> getUserProfile(HttpServletRequest request) {
 //        var userId = jwtService.extractToken(request, TokenType.ACCESS).map(jwtService::getTokenData).map(data -> data.getUser().getUserId());
