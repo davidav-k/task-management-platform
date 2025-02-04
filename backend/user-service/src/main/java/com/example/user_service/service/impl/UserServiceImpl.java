@@ -2,23 +2,18 @@ package com.example.user_service.service.impl;
 
 import com.example.user_service.cache.CacheStore;
 import com.example.user_service.domain.ApiAuthentication;
-import com.example.user_service.domain.RequestContext;
 import com.example.user_service.dto.User;
-import com.example.user_service.entity.ConfirmationEntity;
-import com.example.user_service.entity.CredentialEntity;
-import com.example.user_service.entity.RoleEntity;
-import com.example.user_service.entity.UserEntity;
+import com.example.user_service.entity.*;
 import com.example.user_service.enumeration.Authority;
 import com.example.user_service.enumeration.EventType;
 import com.example.user_service.enumeration.LoginType;
 import com.example.user_service.event.UserEvent;
 import com.example.user_service.exception.ApiException;
-import com.example.user_service.repository.ConfirmationRepository;
-import com.example.user_service.repository.CredentialRepository;
-import com.example.user_service.repository.RoleRepository;
-import com.example.user_service.repository.UserRepository;
+import com.example.user_service.repository.*;
+import com.example.user_service.service.MfaService;
 import com.example.user_service.service.UserService;
 import com.example.user_service.utils.UserUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,9 +23,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Map;
 
-import static java.time.LocalDate.now;
 
 @Service
 @Transactional(rollbackOn = Exception.class)
@@ -42,9 +38,11 @@ public class UserServiceImpl implements UserService {
     private final RoleRepository roleRepository;
     private final CredentialRepository credentialRepository;
     private final ConfirmationRepository confirmationRepository;
+    private final LoginHistoryRepository loginHistoryRepository;
     private final ApplicationEventPublisher publisher;
     private final CacheStore<String, Integer> userCache;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final MfaService mfaService;
 
     @Override
     public void createUser(String firstName, String lastName, String email, String password) {
@@ -82,32 +80,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateLoginAttempt(String email, LoginType loginType) {
-        UserEntity userEntity = getUserEntityByEmail(email);
-        RequestContext.setUserId(userEntity.getId());
-        switch (loginType) {
-            case LOGIN_ATTEMPT -> {
-                if (userCache.get(userEntity.getEmail()) == null) {
-                    userEntity.setLoginAttempts(0);
-                    userEntity.setAccountNonLocked(true);
-                }
-                userEntity.setLoginAttempts(userEntity.getLoginAttempts() + 1);
-                userCache.put(userEntity.getEmail(), userEntity.getLoginAttempts());
-                if (userCache.get(userEntity.getEmail()) > 5) {
-                    userEntity.setAccountNonLocked(false);
-                }
-            }
-            case LOGIN_SUCCESS -> {
-                userEntity.setAccountNonLocked(true);
-                userEntity.setLoginAttempts(0);
-                userEntity.setLastLogin(now());
-                userCache.evict(userEntity.getEmail());
-            }
-        }
-        userRepository.save(userEntity);
-    }
-
-    @Override
     public UserEntity getUserEntityByEmail(String email) {
         return userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new ApiException("User by email not found"));
@@ -133,22 +105,75 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ApiAuthentication authenticateUser(String email, String password) {
-//        UserEntity userEntity = getUserEntityByEmail(email);
-//        CredentialEntity credential = credentialRepository.getCredentialByUserEntityId(userEntity.getId())
-//                .orElseThrow(() -> new ApiException("Invalid credentials"));
-//
-//        if (!passwordEncoder.matches(password, credential.getPassword())) {
-//            throw new ApiException("Invalid email or password");
-//        }
-//
-//        return ApiAuthentication.authenticated(
-//                UserUtils.fromUserEntity(userEntity, userEntity.getRole(), credential),
-//                AuthorityUtils.commaSeparatedStringToAuthorityList(String.valueOf(userEntity.getRole().getAuthorities()))
-//        );
-        return null;
+        UserEntity userEntity = getUserEntityByEmail(email);
+        CredentialEntity credential = credentialRepository.getCredentialByUserEntityId(userEntity.getId())
+                .orElseThrow(() -> new ApiException("Invalid credentials"));
+
+        if (!passwordEncoder.matches(password, credential.getPassword())) {
+            throw new ApiException("Invalid email or password");
+        }
+
+        return ApiAuthentication.authenticated(
+                UserUtils.fromUserEntity(userEntity, userEntity.getRole(), credential),
+                AuthorityUtils.commaSeparatedStringToAuthorityList(userEntity.getRole().getAuthorities().getValue())
+        );
     }
 
+    @Override
+    public void enableMfa(String email) {
+        UserEntity user = getUserEntityByEmail(email);
+        String secretKey = mfaService.generateSecretKey();
+        String qrCodeUrl = mfaService.generateQrCodeUrl(user.getEmail(), secretKey);
 
+        user.setMfa(true);
+        user.setQrCodeSecret(secretKey);
+        user.setQrCodeImageUrl(qrCodeUrl);
 
+        userRepository.save(user);
+    }
+
+    @Override
+    public boolean verifyMfa(String email, int code) {
+        UserEntity user = getUserEntityByEmail(email);
+        return mfaService.validateOtp(user.getQrCodeSecret(), code);
+    }
+
+    @Override
+    public void logLoginAttempt(UserEntity user, boolean success, String ip, String userAgent) {
+        LoginHistoryEntity log = LoginHistoryEntity.builder()
+                .user(user)
+                .loginTime(LocalDateTime.now())
+                .ip(ip)
+                .userAgent(userAgent)
+                .success(success)
+                .build();
+        loginHistoryRepository.save(log);
+    }
+
+    @Override
+    public void updateLoginAttempt(String email, LoginType loginType, HttpServletRequest request) {
+        UserEntity userEntity = getUserEntityByEmail(email);
+        String ip = request.getRemoteAddr();
+        String userAgent = request.getHeader("User-Agent");
+
+        switch (loginType) {
+            case LOGIN_ATTEMPT -> {
+                userEntity.setLoginAttempts(userEntity.getLoginAttempts() + 1);
+                userCache.put(userEntity.getEmail(), userEntity.getLoginAttempts());
+                if (userCache.get(userEntity.getEmail()) > 5) {
+                    userEntity.setAccountNonLocked(false);
+                }
+                logLoginAttempt(userEntity, false, ip, userAgent);
+            }
+            case LOGIN_SUCCESS -> {
+                userEntity.setAccountNonLocked(true);
+                userEntity.setLoginAttempts(0);
+                userEntity.setLastLogin(LocalDate.now());
+                userCache.evict(userEntity.getEmail());
+                logLoginAttempt(userEntity, true, ip, userAgent);
+            }
+        }
+        userRepository.save(userEntity);
+    }
 }
 

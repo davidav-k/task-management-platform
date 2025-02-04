@@ -49,7 +49,7 @@ public class AuthenticationFilter extends AbstractAuthenticationProcessingFilter
         try {
             LoginRequest loginRequest = new ObjectMapper().configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true)
                     .readValue(request.getInputStream(), LoginRequest.class);
-            userService.updateLoginAttempt(loginRequest.getEmail(), LoginType.LOGIN_ATTEMPT);
+            userService.updateLoginAttempt(loginRequest.getEmail(), LoginType.LOGIN_ATTEMPT, request);
 
         } catch (Exception ex) {
             log.error(ex.getMessage());
@@ -62,7 +62,7 @@ public class AuthenticationFilter extends AbstractAuthenticationProcessingFilter
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException, ServletException {
         var user = (User) authentication.getPrincipal();
-        userService.updateLoginAttempt(user.getEmail(), LoginType.LOGIN_SUCCESS);
+        userService.updateLoginAttempt(user.getEmail(), LoginType.LOGIN_SUCCESS, request);
         var httpResponse = user.isMfa() ? sendQrCode(request, user) : sendResponse(request, response, user);
         response.setContentType(APPLICATION_JSON_VALUE);
         response.setStatus(OK.value());

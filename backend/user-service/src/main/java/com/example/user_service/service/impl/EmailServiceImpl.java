@@ -11,79 +11,23 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-/**
- * Service class responsible for sending email notifications for user-related events.
- *
- * <p>This class implements the EmailService interface and provides methods for sending
- * email notifications to users for events like account registration and password resets.
- * The emails are sent asynchronously using the Spring @Async annotation.</p>
- */
-/**
- * Implementation of the EmailService interface for sending email notifications.
- *
- * <p>This class handles the process of sending email notifications related to user
- * actions, such as account creation and password reset requests. It uses the
- * {@code JavaMailSender} to send the emails and formats the message content using
- * utility methods. The emails are sent asynchronously using the @Async annotation,
- * which allows for non-blocking execution.</p>
- *
- * <p>Annotations used:</p>
- * <ul>
- *   <li>{@code @Slf4j} - Provides a logger for logging error messages and other important information.</li>
- *   <li>{@code @Service} - Marks this class as a Spring service component, enabling dependency injection.</li>
- *   <li>{@code @RequiredArgsConstructor} - Generates a constructor with required arguments for all final fields.</li>
- *   <li>{@code @Async} - Indicates that the email sending methods should be executed asynchronously.</li>
- * </ul>
- *
- * <p>Usage example:</p>
- * <pre>
- *     emailService.sendNewAccountEmail("John Doe", "john.doe@example.com", "verificationToken");
- *     emailService.sendPasswordResetEmail("John Doe", "john.doe@example.com", "resetToken");
- * </pre>
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class EmailServiceImpl implements EmailService {
 
-    /**
-     * Subject line for new user account verification emails.
-     */
     private static final String NEW_USER_ACCOUNT_VERIFICATION = "New user account verification";
 
-    /**
-     * Subject line for password reset request emails.
-     */
     private static final String PASSWORD_RESET_REQUEST = "Password reset request";
 
-    /**
-     * The JavaMailSender used to send email messages.
-     */
     private final JavaMailSender sender;
 
-    /**
-     * The host URL used for generating email links (e.g., verification links).
-     */
     @Value("${spring.mail.verify.host}")
     private String host;
 
-    /**
-     * The sender email address used in the From field of the email.
-     */
     @Value("${spring.mail.username}")
     private String fromEmail;
 
-    /**
-     * Sends an email to notify a new user about their account creation.
-     *
-     * <p>This method generates and sends an email containing a verification link that
-     * allows the user to verify their account. It runs asynchronously to avoid blocking
-     * the main execution thread.</p>
-     *
-     * @param name the name of the user
-     * @param email the email address of the recipient
-     * @param key the verification token used in the link
-     */
     @Override
     @Async
     public void sendNewAccountEmail(String name, String email, String key) {
@@ -100,17 +44,7 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
-    /**
-     * Sends an email to notify a user about a password reset request.
-     *
-     * <p>This method generates and sends an email containing a password reset link that
-     * allows the user to reset their password. It runs asynchronously to avoid blocking
-     * the main execution thread.</p>
-     *
-     * @param name the name of the user
-     * @param email the email address of the recipient
-     * @param token the password reset token used in the link
-     */
+
     @Override
     @Async
     public void sendPasswordResetEmail(String name, String email, String token) {

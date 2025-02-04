@@ -61,10 +61,6 @@ public class UserResource {
                         HttpStatus.OK));
     }
 
-
-
-
-
     @PostMapping("/login")
     public ResponseEntity<Response> loginUser(@RequestBody @Valid LoginRequest loginRequest, HttpServletRequest request, HttpServletResponse response) {
         log.info("Logging in user with email: {}", loginRequest.getEmail());
@@ -78,6 +74,38 @@ public class UserResource {
                 "Login successful.",
                 HttpStatus.OK));
     }
+
+    @PostMapping("/enable-mfa")
+    public ResponseEntity<Response> enableMfa(@RequestParam String email, HttpServletRequest request) {
+        userService.enableMfa(email);
+        return ResponseEntity.ok().body(RequestUtils.getResponse(
+                request,
+                Map.of(),
+                "MFA enabled successfully. Scan QR code in Google Authenticator.",
+                HttpStatus.OK));
+    }
+
+    @PostMapping("/verify-mfa")
+    public ResponseEntity<Response> verifyMfa(@RequestParam String email, @RequestParam int code, HttpServletRequest request, HttpServletResponse response) {
+        if (userService.verifyMfa(email, code)) {
+            User user = userService.getUserByEmail(email);
+            jwtService.addCookie(response, user, TokenType.ACCESS);
+            jwtService.addCookie(response, user, TokenType.REFRESH);
+            return ResponseEntity.ok().body(RequestUtils.getResponse(
+                    request,
+                    Map.of("user", user),
+                    "MFA verification successful",
+                    HttpStatus.OK));
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(RequestUtils.getResponse(
+                    request,
+                    Map.of(),
+                    "Invalid MFA code",
+                    HttpStatus.FORBIDDEN));
+        }
+    }
+
+
 
 //    @GetMapping("/profile")
 //    public ResponseEntity<Response> getUserProfile(HttpServletRequest request) {
