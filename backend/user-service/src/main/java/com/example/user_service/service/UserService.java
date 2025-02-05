@@ -27,7 +27,7 @@ public interface UserService {
 
     CredentialEntity getUserCredentialById(Long id);
 
-    ApiAuthentication authenticateUser(String email, String password);
+    ApiAuthentication authenticateUser(String email, String password, HttpServletRequest request);
 
     void enableMfa(String email);
 

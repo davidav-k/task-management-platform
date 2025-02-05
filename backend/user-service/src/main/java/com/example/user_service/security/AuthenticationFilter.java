@@ -6,6 +6,7 @@ import com.example.user_service.enumeration.LoginType;
 import com.example.user_service.enumeration.TokenType;
 import com.example.user_service.service.JwtService;
 import com.example.user_service.service.UserService;
+import com.example.user_service.utils.RequestUtils;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
@@ -23,8 +24,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import static com.example.user_service.constant.Constants.LOGIN_PATH;
-import static com.example.user_service.utils.RequestUtils.getResponse;
-import static com.example.user_service.utils.RequestUtils.handlerErrorResponse;
+
 import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -53,7 +53,7 @@ public class AuthenticationFilter extends AbstractAuthenticationProcessingFilter
 
         } catch (Exception ex) {
             log.error(ex.getMessage());
-            handlerErrorResponse(request, response, ex);
+            RequestUtils.handlerErrorResponse(request, response, ex);
         }
 
         return null;
@@ -75,10 +75,10 @@ public class AuthenticationFilter extends AbstractAuthenticationProcessingFilter
     private Object sendResponse(HttpServletRequest request, HttpServletResponse response, User user) {
         jwtService.addCookie(response, user, TokenType.ACCESS);
         jwtService.addCookie(response, user, TokenType.REFRESH);
-        return getResponse(request, Map.of("user", user), "Login successful", OK);
+        return RequestUtils.getResponse(request, Map.of("user", user), "Login successful", OK);
     }
 
     private Object sendQrCode(HttpServletRequest request, User user) {
-        return getResponse(request, Map.of("user", user), "Please enter QR code", OK);
+        return RequestUtils.getResponse(request, Map.of("user", user), "Please enter QR code", OK);
     }
 }

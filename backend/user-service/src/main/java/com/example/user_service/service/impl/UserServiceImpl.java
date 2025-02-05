@@ -47,7 +47,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void createUser(String firstName, String lastName, String email, String password) {
         UserEntity userEntity = userRepository.save(createNewUser(firstName, lastName, email));
-        CredentialEntity credentialEntity = new CredentialEntity(userEntity, password);
+        CredentialEntity credentialEntity = new CredentialEntity(userEntity, passwordEncoder.encode(password));
         credentialRepository.save(credentialEntity);
         var confirmationEntity = new ConfirmationEntity(userEntity);
         confirmationRepository.save(confirmationEntity);
@@ -104,14 +104,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ApiAuthentication authenticateUser(String email, String password) {
+    public ApiAuthentication authenticateUser(String email, String password, HttpServletRequest request) {
         UserEntity userEntity = getUserEntityByEmail(email);
         CredentialEntity credential = credentialRepository.getCredentialByUserEntityId(userEntity.getId())
                 .orElseThrow(() -> new ApiException("Invalid credentials"));
-
+        String ip = request.getRemoteAddr();
+        String userAgent = request.getHeader("User-Agent");
         if (!passwordEncoder.matches(password, credential.getPassword())) {
+            logLoginAttempt(userEntity, false, ip, userAgent); //todo: failed attempt isn't written to loginHistoryRepository?
             throw new ApiException("Invalid email or password");
         }
+
+        logLoginAttempt(userEntity, true, ip, userAgent);
 
         return ApiAuthentication.authenticated(
                 UserUtils.fromUserEntity(userEntity, userEntity.getRole(), credential),

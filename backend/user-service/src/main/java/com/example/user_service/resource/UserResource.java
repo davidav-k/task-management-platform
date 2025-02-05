@@ -64,7 +64,7 @@ public class UserResource {
     @PostMapping("/login")
     public ResponseEntity<Response> loginUser(@RequestBody @Valid LoginRequest loginRequest, HttpServletRequest request, HttpServletResponse response) {
         log.info("Logging in user with email: {}", loginRequest.getEmail());
-        Authentication authentication = userService.authenticateUser(loginRequest.getEmail(), loginRequest.getPassword());
+        Authentication authentication = userService.authenticateUser(loginRequest.getEmail(), loginRequest.getPassword(), request);
         log.info("User logged in successfully with email: {}", loginRequest.getEmail());
         jwtService.addCookie(response, (User) authentication.getPrincipal(), TokenType.ACCESS);
         jwtService.addCookie(response, (User) authentication.getPrincipal(), TokenType.REFRESH);

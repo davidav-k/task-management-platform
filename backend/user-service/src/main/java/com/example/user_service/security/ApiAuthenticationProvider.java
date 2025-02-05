@@ -65,6 +65,4 @@ public class ApiAuthenticationProvider implements AuthenticationProvider {
         throw new BadCredentialsException("Email and/or password is incorrect. Please try again");
     }
 
-
-
 }
