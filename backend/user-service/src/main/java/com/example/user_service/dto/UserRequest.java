@@ -7,22 +7,6 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.Setter;
 
-
-/**
- * Data Transfer Object (DTO) representing a request to create or update a user.
- *
- * <p>This class is used to capture user input for creating or updating user information.
- * It includes fields for personal information, contact details, and security credentials.
- * The fields are validated using annotations to ensure correctness before processing the request.</p>
- *
- * <p>Annotations used:</p>
- * <ul>
- *   <li>{@code @Getter} - Generates getter methods for all fields.</li>
- *   <li>{@code @Setter} - Generates setter methods for all fields.</li>
- *   <li>{@code @JsonIgnoreProperties(ignoreUnknown = true)} - Ignores unknown JSON properties during deserialization.</li>
- *   <li>Validation annotations like {@code @NotEmpty}, {@code @Email}, and {@code @Pattern} to enforce validation rules.</li>
- * </ul>
- */
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)

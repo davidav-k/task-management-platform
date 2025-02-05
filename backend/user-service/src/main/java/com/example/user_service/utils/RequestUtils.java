@@ -24,18 +24,6 @@ import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-/**
- * Utility class for generating standardized API response objects.
- *
- * <p>This class provides static methods to create {@code Response} objects that encapsulate
- * information about API responses. The response includes metadata such as the timestamp,
- * HTTP status, request URI, message, and any additional data related to the response.</p>
- *
- * <p>Usage example:</p>
- * <pre>
- *     Response response = RequestUtils.getResponse(request, dataMap, "Operation successful", HttpStatus.OK);
- * </pre>
- */
 public class RequestUtils {
 
     private static final BiConsumer<HttpServletResponse, Response> writeResponse = (httpServletResponse, response) -> {

@@ -15,19 +15,7 @@ import static com.example.user_service.constant.Constants.NINETY_DAYS;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 public class UserUtils {
-    /**
-     * Creates a new {@code UserEntity} with the specified details.
-     *
-     * <p>This method generates a new {@code UserEntity} with default values for fields like
-     * login attempts, QR code secret, phone, bio, and profile image URL. The user ID is
-     * generated using {@code UUID} to ensure uniqueness.</p>
-     *
-     * @param firstName the first name of the user
-     * @param lastName the last name of the user
-     * @param email the email address of the user
-     * @param role the role assigned to the user
-     * @return a new {@code UserEntity} instance with the provided details and default values
-     */
+
     public static UserEntity createUserEntity(String firstName, String lastName, String email, RoleEntity role){
         return UserEntity.builder()
                 .userId(UUID.randomUUID().toString())

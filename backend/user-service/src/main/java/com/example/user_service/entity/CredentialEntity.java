@@ -6,12 +6,6 @@ import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
-/**
- * Represents the Credential entity that stores sensitive authentication information
- * associated with a specific user.
- *
- * This class contains information related to user passwords and links to the corresponding User entity.
- */
 @Getter
 @Setter
 @ToString

@@ -8,13 +8,6 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.UUID;
 
-
-/**
- * Represents the Confirmation entity that stores key-based verification information
- * associated with a specific user.
- * This class is used to verify user actions such as
- * email confirmation and password resets.
- */
 @Getter
 @Setter
 @ToString

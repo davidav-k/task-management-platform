@@ -1,13 +1,5 @@
 package com.example.user_service.domain;
 
-
-/**
- * Manages request-scoped context data, specifically the user ID, within a thread-local variable.
- *
- * <p>This class provides static methods to set, get, and clear the user ID for the current thread.
- * It is useful for associating user-specific information with a thread during the execution
- * of a request in a multi-threaded application.</p>
- */
 public class RequestContext {
 
     private static final ThreadLocal<Long> USER_ID = new ThreadLocal<>();

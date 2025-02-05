@@ -1,18 +1,5 @@
 package com.example.user_service.constant;
-/**
- * Utility class that defines application-wide constants
- *
- * <p>This class contains static final fields that are used throughout the application
- * for defining role prefixes, delimiters, and specific authorities for different user
- * roles (User, Manager, Admin, Super Admin). These constants are commonly used in
- * authentication and authorization logic.</p>
- *
- * <p>Usage example:</p>
- * <pre>
- *     String roleWithPrefix = Constants.ROLE_PREFIX + "ADMIN";
- *     String userAuthorities = Constants.USER_AUTHORITIES;
- * </pre>
- */
+
 public class Constants {
 
     public static final String LOGIN_PATH = "/user/login";

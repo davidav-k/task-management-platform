@@ -8,21 +8,6 @@ import lombok.*;
 
 import java.time.LocalDate;
 
-/**
- * Represents the User entity with information related to user accounts and security.
- *
- * <p>This class maps to the "users" table in the database and contains fields that
- * are essential for user authentication, authorization, and profile management.
- * It extends the Auditable class to inherit audit-related fields and logic.</p>
- *
- * <p>Annotations used:</p>
- * <ul>
- *   <li>{@code @Entity} - Specifies that this class is a JPA entity.</li>
- *   <li>{@code @Table(name = "users")} - Maps the class to the "users" table in the database.</li>
- *   <li>{@code @JsonInclude} - Excludes default values from the serialized JSON representation.</li>
- *   <li>{@code @Getter, @Setter, @ToString} - Lombok annotations to generate boilerplate methods.</li>
- * </ul>
- */
 @Getter
 @Setter
 @ToString

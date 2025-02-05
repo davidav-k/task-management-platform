@@ -17,8 +17,5 @@ public class UserEvent {
 
     private EventType type;
 
-    /**
-     * <p>This field stores key information that required for event </p>
-     */
     private Map<?,?> data;
 }
