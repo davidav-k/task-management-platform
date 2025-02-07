@@ -46,6 +46,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void createUser(String firstName, String lastName, String email, String password) {
+        if (userRepository.existsByEmail(email)) {
+            throw new ApiException("User with this email already exists");
+        }
         UserEntity userEntity = userRepository.save(createNewUser(firstName, lastName, email));
         CredentialEntity credentialEntity = new CredentialEntity(userEntity, passwordEncoder.encode(password));
         credentialRepository.save(credentialEntity);
@@ -111,7 +114,7 @@ public class UserServiceImpl implements UserService {
         String ip = request.getRemoteAddr();
         String userAgent = request.getHeader("User-Agent");
         if (!passwordEncoder.matches(password, credential.getPassword())) {
-            logLoginAttempt(userEntity, false, ip, userAgent); //todo: failed attempt isn't written to loginHistoryRepository?
+            logLoginAttempt(userEntity, false, ip, userAgent);
             throw new ApiException("Invalid email or password");
         }
 
@@ -166,8 +169,9 @@ public class UserServiceImpl implements UserService {
                 userCache.put(userEntity.getEmail(), userEntity.getLoginAttempts());
                 if (userCache.get(userEntity.getEmail()) > 5) {
                     userEntity.setAccountNonLocked(false);
+                    logLoginAttempt(userEntity, false, ip, userAgent);//todo: really?
                 }
-                logLoginAttempt(userEntity, false, ip, userAgent);
+
             }
             case LOGIN_SUCCESS -> {
                 userEntity.setAccountNonLocked(true);

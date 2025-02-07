@@ -2,6 +2,8 @@ package com.example.user_service.security;
 
 import com.example.user_service.domain.ApiAuthentication;
 import com.example.user_service.domain.UserPrincipal;
+import com.example.user_service.dto.User;
+import com.example.user_service.entity.CredentialEntity;
 import com.example.user_service.exception.ApiException;
 import com.example.user_service.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -46,17 +48,19 @@ public class ApiAuthenticationProvider implements AuthenticationProvider {
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        var apiAuthentication = apiAuthenticationFunction.apply(authentication);
-        var user = userService.getUserByEmail(apiAuthentication.getEmail());
+        ApiAuthentication apiAuthentication = apiAuthenticationFunction.apply(authentication);
+        User user = userService.getUserByEmail(apiAuthentication.getEmail());
         if (user == null) {
             throw new ApiException("Unable to authenticate user");
         }
-        var userCredential = userService.getUserCredentialById(user.getId());
+        CredentialEntity userCredential = userService.getUserCredentialById(user.getId());
 //        TODO: enable password expiry
 //        if (userCredential.getUpdatedAt().minusDays(NINETY_DAYS).isAfter(LocalDateTime.now())){
 //            throw new ApiException("Password expired. Please reset your password");
 //        }
-        if (user.isCredentialsNonExpired()){throw new ApiException("Password expired. Please reset your password");}
+        if (user.isCredentialsNonExpired()){
+            throw new ApiException("Password expired. Please reset your password");
+        }
         UserPrincipal userPrincipal = new UserPrincipal(user, userCredential);
         validAccount.accept(userPrincipal);
         if (passwordEncoder.matches(apiAuthentication.getPassword(), userCredential.getPassword())){

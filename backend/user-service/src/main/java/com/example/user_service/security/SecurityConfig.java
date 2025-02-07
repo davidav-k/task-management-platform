@@ -66,6 +66,7 @@ public class SecurityConfig {
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)) // Allow H2 console
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(new JwtAuthenticationFilter(jwtService), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .csrf(AbstractHttpConfigurer::disable)
                 .build();

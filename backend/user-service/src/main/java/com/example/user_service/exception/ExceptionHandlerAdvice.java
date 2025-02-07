@@ -5,6 +5,7 @@ import com.example.user_service.exception.ApiException;
 import com.example.user_service.utils.RequestUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -40,6 +41,10 @@ public class ExceptionHandlerAdvice {
         return RequestUtils.getResponse(request, errors, "Constraint violation", HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public Response handleDatabaseConstraintException(DataIntegrityViolationException ex, HttpServletRequest request) {
+        return RequestUtils.getResponse(request, Map.of(), "User with this email already exists", HttpStatus.CONFLICT);
+    }
 
     @ExceptionHandler(Exception.class)
     public Response handleGenericException(Exception ex, HttpServletRequest request) {

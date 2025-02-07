@@ -1,5 +1,7 @@
 package com.example.user_service.security;
 
+import com.example.user_service.domain.ApiAuthentication;
+import com.example.user_service.domain.Response;
 import com.example.user_service.dto.LoginRequest;
 import com.example.user_service.dto.User;
 import com.example.user_service.enumeration.LoginType;
@@ -17,10 +19,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Map;
 
 import static com.example.user_service.constant.Constants.LOGIN_PATH;
@@ -51,34 +55,38 @@ public class AuthenticationFilter extends AbstractAuthenticationProcessingFilter
                     .readValue(request.getInputStream(), LoginRequest.class);
             userService.updateLoginAttempt(loginRequest.getEmail(), LoginType.LOGIN_ATTEMPT, request);
 
+            return getAuthenticationManager().authenticate(ApiAuthentication.unauthenticated(
+                    loginRequest.getEmail(),
+                    loginRequest.getPassword()));
         } catch (Exception ex) {
-            log.error(ex.getMessage());
+            log.error("Authentication failed: {}", ex.getMessage());
             RequestUtils.handlerErrorResponse(request, response, ex);
+            return null;
         }
 
-        return null;
     }
 
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException, ServletException {
-        var user = (User) authentication.getPrincipal();
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        User user = (User) authentication.getPrincipal();
         userService.updateLoginAttempt(user.getEmail(), LoginType.LOGIN_SUCCESS, request);
-        var httpResponse = user.isMfa() ? sendQrCode(request, user) : sendResponse(request, response, user);
+        Response httpResponse = user.isMfa() ? sendQrCode(request, user) : sendResponse(request, response, user);
         response.setContentType(APPLICATION_JSON_VALUE);
         response.setStatus(OK.value());
-        var out = response.getOutputStream();
-        var mapper = new ObjectMapper();
+        OutputStream out = response.getOutputStream();
+        ObjectMapper mapper = new ObjectMapper();
         mapper.writeValue(out, httpResponse);
         out.flush();
     }
 
-    private Object sendResponse(HttpServletRequest request, HttpServletResponse response, User user) {
+    private Response sendResponse(HttpServletRequest request, HttpServletResponse response, User user) {
         jwtService.addCookie(response, user, TokenType.ACCESS);
         jwtService.addCookie(response, user, TokenType.REFRESH);
         return RequestUtils.getResponse(request, Map.of("user", user), "Login successful", OK);
     }
 
-    private Object sendQrCode(HttpServletRequest request, User user) {
+    private Response sendQrCode(HttpServletRequest request, User user) {
         return RequestUtils.getResponse(request, Map.of("user", user), "Please enter QR code", OK);
     }
 }
