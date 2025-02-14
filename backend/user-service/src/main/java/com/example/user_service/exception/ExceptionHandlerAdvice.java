@@ -1,7 +1,6 @@
 package com.example.user_service.exception;
 
 import com.example.user_service.domain.Response;
-import com.example.user_service.exception.ApiException;
 import com.example.user_service.utils.RequestUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;

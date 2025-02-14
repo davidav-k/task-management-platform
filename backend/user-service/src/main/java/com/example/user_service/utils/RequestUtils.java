@@ -12,7 +12,6 @@ import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
 
-import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -36,7 +35,7 @@ public class RequestUtils {
         }
     };
 
-    private static final BiFunction<Exception,HttpStatus, String> errorReason = (exception, httpStatus) -> {
+    private static final BiFunction<Exception, HttpStatus, String> errorReason = (exception, httpStatus) -> {
         if (httpStatus.isSameCodeAs(FORBIDDEN)) {
             return "You do not have permission to access this resource";
         }
@@ -50,9 +49,9 @@ public class RequestUtils {
                 exception instanceof ApiException) {
             return exception.getMessage();
         }
-        if ( httpStatus.is5xxServerError()) {
+        if (httpStatus.is5xxServerError()) {
             return "An internal server error occurred";
-        }else {
+        } else {
             return "An error occurred. Please try again";
         }
     };
@@ -69,10 +68,22 @@ public class RequestUtils {
     }
 
     public static void handlerErrorResponse(HttpServletRequest request, HttpServletResponse response, Exception exception) {
-        if (exception instanceof AccessDeniedException) {
-            Response apiResponse = getErrorResponse(request, response, exception, FORBIDDEN);
-            writeResponse.accept(response, apiResponse);
+        HttpStatus status = determineHttpStatus(exception);
+        Response apiResponse = getErrorResponse(request, response, exception, status);
+        writeResponse.accept(response, apiResponse);
+    }
 
+    private static HttpStatus determineHttpStatus(Exception exception) {
+        if (exception instanceof BadCredentialsException) {
+            return HttpStatus.UNAUTHORIZED;
+        } else if (exception instanceof LockedException) {
+            return HttpStatus.FORBIDDEN;
+        } else if (exception instanceof DisabledException) {
+            return HttpStatus.FORBIDDEN;
+        } else if (exception instanceof CredentialsExpiredException) {
+            return HttpStatus.UNAUTHORIZED;
+        } else {
+            return HttpStatus.INTERNAL_SERVER_ERROR;
         }
     }
 

@@ -58,7 +58,7 @@ public class ApiAuthenticationProvider implements AuthenticationProvider {
 //        if (userCredential.getUpdatedAt().minusDays(NINETY_DAYS).isAfter(LocalDateTime.now())){
 //            throw new ApiException("Password expired. Please reset your password");
 //        }
-        if (user.isCredentialsNonExpired()){
+        if (!user.isCredentialsNonExpired()){
             throw new ApiException("Password expired. Please reset your password");
         }
         UserPrincipal userPrincipal = new UserPrincipal(user, userCredential);

@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -63,15 +64,15 @@ public class UserResource {
 
     @PostMapping("/login")
     public ResponseEntity<Response> loginUser(@RequestBody @Valid LoginRequest loginRequest, HttpServletRequest request, HttpServletResponse response) {
-        log.info("Logging in user with email: {}", loginRequest.getEmail());
+        log.info("Logging in user with email into controller: {}", loginRequest.getEmail());
         Authentication authentication = userService.authenticateUser(loginRequest.getEmail(), loginRequest.getPassword(), request);
-        log.info("User logged in successfully with email: {}", loginRequest.getEmail());
+        log.info("User logged in successfully with email into controller: {}", loginRequest.getEmail());
         jwtService.addCookie(response, (User) authentication.getPrincipal(), TokenType.ACCESS);
         jwtService.addCookie(response, (User) authentication.getPrincipal(), TokenType.REFRESH);
         return ResponseEntity.ok().body(RequestUtils.getResponse(
                 request,
                 Map.of("user", (User) authentication.getPrincipal()),
-                "Login successful.",
+                "Login successful into controller.",
                 HttpStatus.OK));
     }
 
@@ -103,6 +104,17 @@ public class UserResource {
                     "Invalid MFA code",
                     HttpStatus.FORBIDDEN));
         }
+    }
+
+    @PreAuthorize("hasAuthority('user:unlock')")
+    @PostMapping("/unlock")
+    public ResponseEntity<Response> unlockUser(@RequestParam String email, HttpServletRequest request) {
+        userService.unlockedUser(email);
+        return ResponseEntity.ok().body(RequestUtils.getResponse(
+                request,
+                Map.of(),
+                "User unlocked successfully.",
+                HttpStatus.OK));
     }
 
 

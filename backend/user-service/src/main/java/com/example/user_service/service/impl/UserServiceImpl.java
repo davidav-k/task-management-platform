@@ -2,6 +2,7 @@ package com.example.user_service.service.impl;
 
 import com.example.user_service.cache.CacheStore;
 import com.example.user_service.domain.ApiAuthentication;
+import com.example.user_service.domain.RequestContext;
 import com.example.user_service.dto.User;
 import com.example.user_service.entity.*;
 import com.example.user_service.enumeration.Authority;
@@ -169,7 +170,6 @@ public class UserServiceImpl implements UserService {
                 userCache.put(userEntity.getEmail(), userEntity.getLoginAttempts());
                 if (userCache.get(userEntity.getEmail()) > 5) {
                     userEntity.setAccountNonLocked(false);
-                    logLoginAttempt(userEntity, false, ip, userAgent);//todo: really?
                 }
 
             }
@@ -183,5 +183,15 @@ public class UserServiceImpl implements UserService {
         }
         userRepository.save(userEntity);
     }
+
+    @Override
+    public void unlockedUser(String email) {
+        UserEntity userEntity = getUserEntityByEmail(email);
+        userCache.evict(userEntity.getEmail());
+        userEntity.setLoginAttempts(0);
+        userEntity.setAccountNonLocked(true);
+        userRepository.save(userEntity);
+    }
+
 }
 

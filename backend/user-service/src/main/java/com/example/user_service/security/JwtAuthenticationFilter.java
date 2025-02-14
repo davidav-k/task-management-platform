@@ -37,13 +37,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (token.isPresent() && jwtService.getTokenData(token.get(), TokenData::isValid)) {
             log.info("JWT token found and valid");
-
             User user = jwtService.getTokenData(token.get(), TokenData::getUser);
 
             Authentication authentication = new UsernamePasswordAuthenticationToken(
                     user, null, jwtService.getTokenData(token.get(), TokenData::getAuthorities)
             );
-
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } else {
             log.warn("JWT token is missing or invalid");

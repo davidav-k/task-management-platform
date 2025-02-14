@@ -16,16 +16,13 @@ spring:
     password: ${POSTGRESQL_PASSWORD}
   jpa:
     open-in-view: false
-#    database-platform: org.hibernate.dialect.PosgreSQLInnoDBDialect
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
     generate-ddl: true
-    show-sql: true
+    show-sql: false
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
         globally_quoted_identifiers: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
   sql:
     init:
@@ -81,3 +78,5 @@ jwt:
 api:
   endpoint:
     base-url: ${BASE_URL}
+    user:
+      login: ${BASE_URL}/user/login

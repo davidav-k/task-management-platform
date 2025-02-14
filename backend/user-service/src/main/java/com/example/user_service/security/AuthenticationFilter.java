@@ -1,6 +1,7 @@
 package com.example.user_service.security;
 
 import com.example.user_service.domain.ApiAuthentication;
+import com.example.user_service.domain.RequestContext;
 import com.example.user_service.domain.Response;
 import com.example.user_service.dto.LoginRequest;
 import com.example.user_service.dto.User;
@@ -16,6 +17,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -27,8 +29,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
 
-import static com.example.user_service.constant.Constants.LOGIN_PATH;
-
 import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -38,18 +38,19 @@ public class AuthenticationFilter extends AbstractAuthenticationProcessingFilter
     private final UserService userService;
     private final JwtService jwtService;
 
-    protected AuthenticationFilter(String defaultFilterProcessesUrl,
-                                   AuthenticationManager authenticationManager,
-                                   UserService userService,
-                                   JwtService jwtService) {
-        super(new AntPathRequestMatcher(LOGIN_PATH, POST.name()), authenticationManager);
+    protected AuthenticationFilter(
+            @Value("${api.endpoint.user.login}") String loginPath,
+            AuthenticationManager authenticationManager,
+            UserService userService,
+            JwtService jwtService) {
+        super(new AntPathRequestMatcher(loginPath, POST.name()), authenticationManager);
         this.userService = userService;
         this.jwtService = jwtService;
     }
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException, IOException, ServletException {
-        log.info("Attempting authentication");
+        log.info("Attempting authentication into filter");
         try {
             LoginRequest loginRequest = new ObjectMapper().configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true)
                     .readValue(request.getInputStream(), LoginRequest.class);
@@ -59,7 +60,7 @@ public class AuthenticationFilter extends AbstractAuthenticationProcessingFilter
                     loginRequest.getEmail(),
                     loginRequest.getPassword()));
         } catch (Exception ex) {
-            log.error("Authentication failed: {}", ex.getMessage());
+            log.error("Authentication into filter failed: {}", ex.getMessage());
             RequestUtils.handlerErrorResponse(request, response, ex);
             return null;
         }
@@ -88,5 +89,11 @@ public class AuthenticationFilter extends AbstractAuthenticationProcessingFilter
 
     private Response sendQrCode(HttpServletRequest request, User user) {
         return RequestUtils.getResponse(request, Map.of("user", user), "Please enter QR code", OK);
+    }
+
+    @Override
+    protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException {
+        log.error("Authentication failed: {}", failed.getMessage());
+        RequestUtils.handlerErrorResponse(request, response, failed);
     }
 }

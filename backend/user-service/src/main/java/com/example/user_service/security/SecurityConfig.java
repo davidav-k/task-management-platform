@@ -20,7 +20,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import java.util.List;
 
-import static com.example.user_service.constant.Constants.STRENGTH;
+import static com.example.user_service.constant.Constants.*;
 
 
 @Configuration
@@ -51,7 +51,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authenticationManager, UserService userService, JwtService jwtService) throws Exception {
-        AuthenticationFilter authenticationFilter = new AuthenticationFilter("/user/login", authenticationManager, userService, jwtService);
+        AuthenticationFilter authenticationFilter = new AuthenticationFilter(baseUrl + "/user/login", authenticationManager, userService, jwtService);
         authenticationFilter.setAuthenticationManager(authenticationManager);
 
         return http
@@ -67,7 +67,7 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(new JwtAuthenticationFilter(jwtService), UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(authenticationFilter, JwtAuthenticationFilter.class)
                 .csrf(AbstractHttpConfigurer::disable)
                 .build();
     }

@@ -36,5 +36,7 @@ public interface UserService {
     void logLoginAttempt(UserEntity user, boolean success, String ip, String userAgent);
 
     void updateLoginAttempt(String email, LoginType loginType, HttpServletRequest request);
+
+    void unlockedUser(String email);
 }
 
