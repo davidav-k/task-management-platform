@@ -98,17 +98,17 @@ public class JwtServiceImpl extends JwrConfig implements JwtService {
                 var cookie = new Cookie(tokenType.getValue(), accessToken);
                 cookie.setHttpOnly(true);
 //                cookie.setSecure(true); for https
-                cookie.setMaxAge(2 * 60);
+                cookie.setMaxAge(10 * 60); // 10 min
                 cookie.setPath("/");
                 cookie.setAttribute("SameSite", "None");
                 response.addCookie(cookie);
             }
             case REFRESH -> {
                 var refreshToken = createToken(user, Token::getRefresh);
-                var cookie = new Cookie(tokenType.getValue(), refreshToken);
+                Cookie cookie = new Cookie(tokenType.getValue(), refreshToken);
                 cookie.setHttpOnly(true);
 //                cookie.setSecure(true);  for https
-                cookie.setMaxAge(2 * 60 * 60);
+                cookie.setMaxAge(2 * 60 * 60); // 2 hours
                 cookie.setPath("/");
                 cookie.setAttribute("SameSite", "None");
                 response.addCookie(cookie);
@@ -137,8 +137,8 @@ public class JwtServiceImpl extends JwrConfig implements JwtService {
     }
 
     @Override
-    public Optional<String> extractToken(HttpServletRequest request, String tokenType) {
-        return extractToken.apply(request, tokenType);
+    public Optional<String> extractToken(HttpServletRequest request, String cookieName) {
+        return extractToken.apply(request, cookieName);
     }
 
     @Override
@@ -150,12 +150,12 @@ public class JwtServiceImpl extends JwrConfig implements JwtService {
     public <T> T getTokenData(String token, Function<TokenData, T> tokenFunction) {
         return tokenFunction.apply(
                 TokenData.builder()
-                .isValid(Objects.equals(userService.getUserByUserId(subject.apply(token)).getUserId(), claimsFunction.apply(token).getSubject()))
-                .authorities(authorities.apply(token))
-                .claims(claimsFunction.apply(token))
+                        .isValid(Objects.equals(userService.getUserByUserId(subject.apply(token)).getUserId(), claimsFunction.apply(token).getSubject()))
+                        .authorities(authorities.apply(token))
+                        .claims(claimsFunction.apply(token))
                         .user(userService.getUserByUserId(subject.apply(token)))
 
-                .build());
+                        .build());
     }
 
     @Override

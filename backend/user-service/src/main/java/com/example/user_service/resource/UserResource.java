@@ -1,6 +1,7 @@
 package com.example.user_service.resource;
 
 import com.example.user_service.domain.Response;
+import com.example.user_service.domain.TokenData;
 import com.example.user_service.dto.LoginRequest;
 import com.example.user_service.dto.UserRequest;
 import com.example.user_service.dto.User;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.Map;
+import java.util.Optional;
 
 import static java.util.Collections.emptyMap;
 
@@ -117,28 +119,41 @@ public class UserResource {
                 HttpStatus.OK));
     }
 
+    @PostMapping("/refresh")
+    public ResponseEntity<Response> refreshTokens(HttpServletRequest request, HttpServletResponse response) {
+        Optional<String> refreshToken = jwtService.extractToken(request, TokenType.REFRESH.getValue());
+        if (refreshToken.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(RequestUtils.getResponse(request, emptyMap(), "Unauthorized access.", HttpStatus.UNAUTHORIZED));
+        }
+        var tokenData = jwtService.getTokenData(refreshToken.get(), TokenData::getUser);
+        jwtService.addCookie(response, userService.getUserByUserId(tokenData.getUserId()), TokenType.ACCESS);
+        jwtService.addCookie(response, userService.getUserByUserId(tokenData.getUserId()), TokenType.REFRESH);
+        return ResponseEntity.ok().body(RequestUtils.getResponse(request, emptyMap(), "Tokens refreshed successfully.", HttpStatus.OK));
+    }
 
+    @GetMapping("/profile")
+    public ResponseEntity<Response> getUserProfile(HttpServletRequest request) {
+        Optional<String> optionalAccessToken = jwtService.extractToken(request, TokenType.ACCESS.getValue());
+        if (optionalAccessToken.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(RequestUtils.getResponse(request, emptyMap(), "Unauthorized access.", HttpStatus.UNAUTHORIZED));
+        }
+        var tokenData = jwtService.getTokenData(optionalAccessToken.get(), TokenData::getUser);
+        User user = userService.getUserByUserId(tokenData.getUserId());
+        return ResponseEntity.ok().body(RequestUtils.getResponse(request, Map.of("user", user), "User profile retrieved successfully.", HttpStatus.OK));
+    }
 
-//    @GetMapping("/profile")
-//    public ResponseEntity<Response> getUserProfile(HttpServletRequest request) {
-//        var userId = jwtService.extractToken(request, TokenType.ACCESS).map(jwtService::getTokenData).map(data -> data.getUser().getUserId());
-//        if (userId.isEmpty()) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(RequestUtils.getResponse(request, emptyMap(), "Unauthorized access.", HttpStatus.UNAUTHORIZED));
-//        }
-//        var user = userService.getUserByUserId(userId.get());
-//        return ResponseEntity.ok().body(RequestUtils.getResponse(request, Map.of("user", user), "User profile retrieved successfully.", HttpStatus.OK));
-//    }
-//
 //    @PutMapping("/update")
 //    public ResponseEntity<Response> updateUser(@RequestBody @Valid UserRequest userRequest, HttpServletRequest request) {
-//        var userId = jwtService.extractToken(request, TokenType.ACCESS).map(jwtService::getTokenData).map(data -> data.getUser().getUserId());
+//        var userId = jwtService.extractToken(request, TokenType.ACCESS.getValue())
+//                .map(user -> jwtService.getTokenData(user, TokenData::getUser))
+//                .map(user -> userService.getUserByUserId(user.getUserId()));
 //        if (userId.isEmpty()) {
 //            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(RequestUtils.getResponse(request, emptyMap(), "Unauthorized access.", HttpStatus.UNAUTHORIZED));
 //        }
 //        userService.updateUser(userId.get(), userRequest);
 //        return ResponseEntity.ok().body(RequestUtils.getResponse(request, emptyMap(), "User updated successfully.", HttpStatus.OK));
 //    }
-//
+
 //    @DeleteMapping("/delete")
 //    public ResponseEntity<Response> deleteUser(HttpServletRequest request) {
 //        var userId = jwtService.extractToken(request, TokenType.ACCESS).map(jwtService::getTokenData).map(data -> data.getUser().getUserId());
@@ -149,17 +164,7 @@ public class UserResource {
 //        return ResponseEntity.ok().body(RequestUtils.getResponse(request, emptyMap(), "User deleted successfully.", HttpStatus.OK));
 //    }
 //
-//
-//    @PostMapping("/refresh")
-//    public ResponseEntity<Response> refreshTokens(HttpServletRequest request, HttpServletResponse response) {
-//        var refreshToken = jwtService.extractToken(request, TokenType.REFRESH);
-//        if (refreshToken.isEmpty()) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(RequestUtils.getResponse(request, emptyMap(), "Unauthorized access.", HttpStatus.UNAUTHORIZED));
-//        }
-//        var tokenData = jwtService.getTokenData(refreshToken.get());
-//        jwtService.addCookie(response, tokenData.getUser(), TokenType.ACCESS);
-//        jwtService.addCookie(response, tokenData.getUser(), TokenType.REFRESH);
-//        return ResponseEntity.ok().body(RequestUtils.getResponse(request, emptyMap(), "Tokens refreshed successfully.", HttpStatus.OK));
-//    }
+
+
 }
 
