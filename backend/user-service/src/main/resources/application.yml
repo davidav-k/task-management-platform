@@ -80,3 +80,6 @@ api:
     base-url: ${BASE_URL}
     user:
       login: ${BASE_URL}/user/login
+
+admin:
+  password: ${ADMIN_PASSWORD}

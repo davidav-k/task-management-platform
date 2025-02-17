@@ -19,20 +19,15 @@ public class CacheStore<K, V> {
     }
 
     public V get(@NonNull K key) {
-        log.info("Fetching value from cache for key: {} - {}", key, cache.getIfPresent(key));
         return cache.getIfPresent(key);
     }
 
     public void put(@NonNull K key, @NonNull V value) {
-        log.info("Putting value in cache for key:value {}:{}", key, value);
         cache.put(key, value);
     }
 
     public void evict(@NonNull K key) {
-        log.info("Removing value from cache for key: {}", key);
         cache.invalidate(key);
-        log.info("Fetching value from cache for key- {}:{}", key, cache.getIfPresent(key));
     }
-
 
 }
