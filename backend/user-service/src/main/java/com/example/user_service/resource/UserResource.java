@@ -5,7 +5,9 @@ import com.example.user_service.domain.TokenData;
 import com.example.user_service.dto.LoginRequest;
 import com.example.user_service.dto.UserRequest;
 import com.example.user_service.dto.User;
+import com.example.user_service.entity.UserEntity;
 import com.example.user_service.enumeration.TokenType;
+import com.example.user_service.repository.UserRepository;
 import com.example.user_service.service.JwtService;
 import com.example.user_service.service.UserService;
 import com.example.user_service.utils.RequestUtils;
@@ -34,22 +36,24 @@ public class UserResource {
 
     private final UserService userService;
     private final JwtService jwtService;
+    private final UserRepository userRepository;
 
 
     private URI getUri() {
         return URI.create("");
     }
 
+    @PreAuthorize("hasAuthority('user:create')")
     @PostMapping("/register")
     public ResponseEntity<Response> saveUser(@RequestBody @Valid UserRequest userRequest, HttpServletRequest request) {
         log.info("Creating new user with email: {}", userRequest.getEmail());
         userService.createUser(userRequest.getFirstName(), userRequest.getLastName(), userRequest.getEmail(), userRequest.getPassword());
         log.info("Account created successfully: {}", userRequest.getEmail());
         return ResponseEntity.created(getUri()).body(RequestUtils.getResponse(
-                        request,
-                        emptyMap(),
-                        "Account created. Check your email to enable your account",
-                        HttpStatus.CREATED));
+                request,
+                emptyMap(),
+                "Account created. Check your email to enable your account",
+                HttpStatus.CREATED));
     }
 
     @GetMapping("/verify/account")
@@ -58,10 +62,10 @@ public class UserResource {
         userService.verifyAccountKey(key);
         log.info("Account verified successfully for key: {}", key);
         return ResponseEntity.ok().body(RequestUtils.getResponse(
-                        request,
-                        emptyMap(),
-                        "Account verified successfully.",
-                        HttpStatus.OK));
+                request,
+                emptyMap(),
+                "Account verified successfully.",
+                HttpStatus.OK));
     }
 
     @PostMapping("/login")
@@ -78,8 +82,9 @@ public class UserResource {
                 HttpStatus.OK));
     }
 
-    @PostMapping("/enable-mfa")
-    public ResponseEntity<Response> enableMfa(@RequestParam String email, HttpServletRequest request) {
+    //todo: security
+    @PostMapping("/{userId}/enable-mfa")
+    public ResponseEntity<Response> enableMfa(@PathVariable Long userId, @RequestParam String email, HttpServletRequest request) {
         userService.enableMfa(email);
         return ResponseEntity.ok().body(RequestUtils.getResponse(
                 request,
@@ -109,8 +114,8 @@ public class UserResource {
     }
 
     @PreAuthorize("hasAuthority('user:unlock')")
-    @PostMapping("/unlock")
-    public ResponseEntity<Response> unlockUser(@RequestParam String email, HttpServletRequest request) {
+    @PostMapping("/{userId}/unlock")
+    public ResponseEntity<Response> unlockUser(@PathVariable Long userId, @RequestParam String email, HttpServletRequest request) {
         userService.unlockedUser(email);
         return ResponseEntity.ok().body(RequestUtils.getResponse(
                 request,
@@ -125,7 +130,7 @@ public class UserResource {
         if (refreshToken.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(RequestUtils.getResponse(request, emptyMap(), "Unauthorized access.", HttpStatus.UNAUTHORIZED));
         }
-        var tokenData = jwtService.getTokenData(refreshToken.get(), TokenData::getUser);
+        User tokenData = jwtService.getTokenData(refreshToken.get(), TokenData::getUser);
         jwtService.addCookie(response, userService.getUserByUserId(tokenData.getUserId()), TokenType.ACCESS);
         jwtService.addCookie(response, userService.getUserByUserId(tokenData.getUserId()), TokenType.REFRESH);
         return ResponseEntity.ok().body(RequestUtils.getResponse(request, emptyMap(), "Tokens refreshed successfully.", HttpStatus.OK));
@@ -141,30 +146,29 @@ public class UserResource {
         User user = userService.getUserByUserId(tokenData.getUserId());
         return ResponseEntity.ok().body(RequestUtils.getResponse(request, Map.of("user", user), "User profile retrieved successfully.", HttpStatus.OK));
     }
+    //todo: security
+    @PutMapping("/{userId}/update")
+    public ResponseEntity<Response> updateUser(@PathVariable Long userId, @RequestBody @Valid UserRequest userRequest, HttpServletRequest request) {
 
-//    @PutMapping("/update")
-//    public ResponseEntity<Response> updateUser(@RequestBody @Valid UserRequest userRequest, HttpServletRequest request) {
-//        var userId = jwtService.extractToken(request, TokenType.ACCESS.getValue())
-//                .map(user -> jwtService.getTokenData(user, TokenData::getUser))
-//                .map(user -> userService.getUserByUserId(user.getUserId()));
-//        if (userId.isEmpty()) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(RequestUtils.getResponse(request, emptyMap(), "Unauthorized access.", HttpStatus.UNAUTHORIZED));
-//        }
-//        userService.updateUser(userId.get(), userRequest);
-//        return ResponseEntity.ok().body(RequestUtils.getResponse(request, emptyMap(), "User updated successfully.", HttpStatus.OK));
-//    }
+        return ResponseEntity.ok().body(RequestUtils.getResponse(request, emptyMap(), "User updated successfully.", HttpStatus.OK));
+    }
 
-//    @DeleteMapping("/delete")
-//    public ResponseEntity<Response> deleteUser(HttpServletRequest request) {
-//        var userId = jwtService.extractToken(request, TokenType.ACCESS).map(jwtService::getTokenData).map(data -> data.getUser().getUserId());
-//        if (userId.isEmpty()) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(RequestUtils.getResponse(request, emptyMap(), "Unauthorized access.", HttpStatus.UNAUTHORIZED));
-//        }
-//        userService.deleteUser(userId.get());
-//        return ResponseEntity.ok().body(RequestUtils.getResponse(request, emptyMap(), "User deleted successfully.", HttpStatus.OK));
-//    }
-//
+    //todo: security
+    @PatchMapping("/{userId}/password")
+    public ResponseEntity<Response> changePassword(@PathVariable Long userId, @RequestBody Map<String, String> passwordMap, HttpServletRequest request) {
+        String oldPassword = passwordMap.get("oldPassword");
+        String newPassword = passwordMap.get("newPassword");
+        String confirmNewPassword = passwordMap.get("confirmNewPassword");
 
+        userService.changePassword(userId, oldPassword, newPassword, confirmNewPassword);
+        return ResponseEntity.ok().body(RequestUtils.getResponse(request, emptyMap(), "Changed password successfully.", HttpStatus.OK));
+    }
 
+    //todo: security
+    @DeleteMapping("/{userId}/delete")
+    public ResponseEntity<Response> deleteUser(@PathVariable Long userId, HttpServletRequest request, Authentication authentication) {
+
+        userService.deleteUser(userId, authentication);
+        return ResponseEntity.ok().body(RequestUtils.getResponse(request, emptyMap(), "User deleted successfully.", HttpStatus.OK));
+    }
 }
-

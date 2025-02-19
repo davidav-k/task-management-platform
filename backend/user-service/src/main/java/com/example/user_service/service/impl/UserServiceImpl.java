@@ -4,6 +4,7 @@ import com.example.user_service.cache.CacheStore;
 import com.example.user_service.domain.ApiAuthentication;
 import com.example.user_service.domain.RequestContext;
 import com.example.user_service.dto.User;
+import com.example.user_service.dto.UserRequest;
 import com.example.user_service.entity.*;
 import com.example.user_service.enumeration.Authority;
 import com.example.user_service.enumeration.EventType;
@@ -14,14 +15,21 @@ import com.example.user_service.repository.*;
 import com.example.user_service.service.MfaService;
 import com.example.user_service.service.UserService;
 import com.example.user_service.utils.UserUtils;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.helpers.MessageFormatter;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 
 
 import java.time.LocalDate;
@@ -193,5 +201,36 @@ public class UserServiceImpl implements UserService {
         userRepository.save(userEntity);
     }
 
+    @Override
+    public void updateUser(UserEntity userEntity, UserRequest userRequest) {
+        if (userRepository.existsByEmail(userRequest.getEmail())){
+            throw new ApiException("User with this email already exists");
+        }
+        UserUtils.copyNonNullProperties(userRequest, userEntity);
+        userRepository.save(userEntity);
+    }
+
+    @Override
+    public void changePassword(Long id, String oldPassword, String newPassword, String confirmNewPassword) {
+
+        CredentialEntity credentialEntity = getUserCredentialById(id);
+        if (!passwordEncoder.matches(oldPassword, credentialEntity.getPassword())) {
+            throw new BadCredentialsException("Old password is incorrect");
+        }
+        if (!newPassword.equals(confirmNewPassword)) {
+            throw new ApiException("New password and confirm new password do not match");
+        }
+        //The new password must contain at least one digit, one lowercase letter, one uppercase letter, and be at least 8 characters long.
+        String passwordPolicy = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}$";
+        if (!newPassword.matches(passwordPolicy)) {
+            throw new ApiException("New password does not conform to password policy");
+        }
+        credentialEntity.setPassword(passwordEncoder.encode(newPassword));
+    }
+
+    @Override
+    public void deleteUser(Long userId, Authentication authentication) {
+
+    }
 }
 

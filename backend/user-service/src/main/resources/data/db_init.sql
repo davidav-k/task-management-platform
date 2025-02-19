@@ -96,8 +96,8 @@ alter table public.login_history
 CREATE SEQUENCE public.primary_key_seq START 1 INCREMENT 1 NO MINVALUE NO MAXVALUE CACHE 1;
 ALTER SEQUENCE public.primary_key_seq OWNER TO "user";
 
-INSERT INTO public.roles (id, name, authorities, created_at, created_by, reference_id, updated_at, updated_by) VALUES (1, 'ADMIN','user:create, user:read, user:update, user:unlock, document:create, document:read, document:update, document:delete','2024-01-29 22:10:47.925942', 0, 'system','2024-01-29 22:10:47.926642', 0);
-INSERT INTO public.roles (id, name, authorities, created_at, created_by, reference_id, updated_at, updated_by) VALUES (2, 'USER', 'document:create, document:read, document:update', '2024-01-29 22:10:47.925942', 0, 'system', '2024-01-29 22:10:47.926642', 0);
+INSERT INTO public.roles (id, name, authorities, created_at, created_by, reference_id, updated_at, updated_by) VALUES (1, 'ADMIN','user:create,user:read,user:update,user:unlock,document:create,document:read,document:update,document:delete','2024-01-29 22:10:47.925942', 0, 'system','2024-01-29 22:10:47.926642', 0);
+INSERT INTO public.roles (id, name, authorities, created_at, created_by, reference_id, updated_at, updated_by) VALUES (2, 'USER', 'document:create,document:read,document:update', '2024-01-29 22:10:47.925942', 0, 'system', '2024-01-29 22:10:47.926642', 0);
 INSERT INTO public.users (id, user_id, created_at, created_by, reference_id, updated_at, updated_by, email, first_name, last_name, login_attempts, phone, bio, image_url, mfa, enabled, account_non_expired, account_non_locked, qr_code_image_url, qr_code_secret, last_login) VALUES (0, '123e4567-e89b-12d3-a456-426614174000', '2024-01-29 22:10:47.925942', 0, 'system', '2024-01-29 22:10:47.926642', 0, 'system@gmail.com', 'System', 'System', 0, '1234567890', 'This is not a user but the system itself', 'https://cdn-icons-png.flaticon.com/128/2911/2911833.png', true, true, true, true, null, null, '2025-02-15');
 
 

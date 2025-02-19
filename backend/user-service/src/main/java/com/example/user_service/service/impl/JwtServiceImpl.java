@@ -92,30 +92,36 @@ public class JwtServiceImpl extends JwrConfig implements JwtService {
                             .compact();
 
     private final TriConsumer<HttpServletResponse, User, TokenType> addCookie = (response, user, tokenType) -> {
+        boolean isSecure = response.getHeader("X-Forwarded-Proto") != null && response.getHeader("X-Forwarded-Proto").equals("https");
+
         switch (tokenType) {
             case ACCESS -> {
                 var accessToken = createToken(user, Token::getAccess);
                 var cookie = new Cookie(tokenType.getValue(), accessToken);
                 cookie.setHttpOnly(true);
-//                cookie.setSecure(true); for https
-                cookie.setMaxAge(10 * 60); // 10 min
+                cookie.setSecure(isSecure);
+                cookie.setMaxAge(10 * 60);  // 10 мин
                 cookie.setPath("/");
-                cookie.setAttribute("SameSite", "None");
+                cookie.setAttribute("SameSite", isSecure ? "None" : "Lax");
                 response.addCookie(cookie);
+                log.info("🍪 Cookie: {} = {} | Secure: {} | SameSite: {}", tokenType.getValue(), accessToken, cookie.getSecure(), cookie.getAttribute("SameSite"));
+
             }
             case REFRESH -> {
                 var refreshToken = createToken(user, Token::getRefresh);
                 Cookie cookie = new Cookie(tokenType.getValue(), refreshToken);
                 cookie.setHttpOnly(true);
-//                cookie.setSecure(true);  for https
-                cookie.setMaxAge(2 * 60 * 60); // 2 hours
+                cookie.setSecure(isSecure);
+                cookie.setMaxAge(2 * 60 * 60); // 2 часа
                 cookie.setPath("/");
-                cookie.setAttribute("SameSite", "None");
+                cookie.setAttribute("SameSite", isSecure ? "None" : "Lax");
                 response.addCookie(cookie);
+                log.info("🍪 Cookie: {} = {} | Secure: {} | SameSite: {}", tokenType.getValue(), refreshToken, cookie.getSecure(), cookie.getAttribute("SameSite"));
 
             }
         }
     };
+
 
     private <T> T getClaimsValue(String token, Function<Claims, T> claims) {
         return claimsFunction.andThen(claims).apply(token);
@@ -143,6 +149,7 @@ public class JwtServiceImpl extends JwrConfig implements JwtService {
 
     @Override
     public void addCookie(HttpServletResponse response, User user, TokenType tokenType) {
+        log.info("addCookie before accept");
         addCookie.accept(response, user, tokenType);
     }
 

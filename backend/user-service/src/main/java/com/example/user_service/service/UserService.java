@@ -2,11 +2,13 @@ package com.example.user_service.service;
 
 import com.example.user_service.domain.ApiAuthentication;
 import com.example.user_service.dto.User;
+import com.example.user_service.dto.UserRequest;
 import com.example.user_service.entity.CredentialEntity;
 import com.example.user_service.entity.RoleEntity;
 import com.example.user_service.entity.UserEntity;
 import com.example.user_service.enumeration.LoginType;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import org.springframework.security.core.Authentication;
@@ -38,5 +40,11 @@ public interface UserService {
     void updateLoginAttempt(String email, LoginType loginType, HttpServletRequest request);
 
     void unlockedUser(String email);
+
+    void updateUser(UserEntity userEntity, @Valid UserRequest userRequest);
+
+    void changePassword(Long id, String oldPassword, String newPassword, String confirmNewPassword);
+
+    void deleteUser(Long userId, Authentication authentication);
 }
 

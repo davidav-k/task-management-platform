@@ -7,6 +7,7 @@ import com.example.user_service.entity.CredentialEntity;
 import com.example.user_service.exception.ApiException;
 import com.example.user_service.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -15,7 +16,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
-
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ApiAuthenticationProvider implements AuthenticationProvider {
@@ -64,6 +65,7 @@ public class ApiAuthenticationProvider implements AuthenticationProvider {
         UserPrincipal userPrincipal = new UserPrincipal(user, userCredential);
         validAccount.accept(userPrincipal);
         if (passwordEncoder.matches(apiAuthentication.getPassword(), userCredential.getPassword())){
+            log.info("authenticated success into ApiAuthenticationProvider");
             return ApiAuthentication.authenticated(user, userPrincipal.getAuthorities());
         }
         throw new BadCredentialsException("Email and/or password is incorrect. Please try again");

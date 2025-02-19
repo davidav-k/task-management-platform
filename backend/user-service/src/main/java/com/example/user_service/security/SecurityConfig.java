@@ -9,6 +9,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
@@ -24,6 +25,7 @@ import static com.example.user_service.constant.Constants.*;
 
 
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Value("${api.endpoint.base-url}")
@@ -56,7 +58,7 @@ public class SecurityConfig {
 
         return http
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(HttpMethod.POST, baseUrl + "/user/register").permitAll()
+//                        .requestMatchers(HttpMethod.POST, baseUrl + "/user/register").permitAll()
                         .requestMatchers(HttpMethod.GET, baseUrl + "/user/verify/account").permitAll()
                         .requestMatchers(HttpMethod.POST, baseUrl + "/user/login").permitAll()
                         .requestMatchers(SWAGGER_WHITELIST).permitAll()
