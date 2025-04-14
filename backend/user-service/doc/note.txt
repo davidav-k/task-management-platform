@@ -51,4 +51,26 @@ application.yml: sql: init: mode: never
     - записывает объект Response в HTTP-ответ HttpServletResponse в формате JSON
     - использует метод writeValueAsString библиотеки Jackson для преобразования объекта Response в строку JSON
 ======================================================================================
-
+application.yml
+#  mail:
+#    properties:
+#      mail:
+#        mime:
+#          charset: UTF
+#        smtp:
+#          writetimeout: 10000
+#          connectiontimeout: 10000
+#          timeout: 10000
+#          auth: false
+#          starttls:
+#            enable: false
+#            required: true
+======================================================================================
+application-dev.yml
+##mail
+#EMAIL_HOST: smtp.gmail.com
+#EMAIL_PORT: 587
+#EMAIL_ID: davidtnko@gmail.com
+#EMAIL_PASSWORD:
+#VERIFY_EMAIL_HOST: http://localhost:8085
+=======================================================================================

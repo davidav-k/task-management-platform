@@ -11,24 +11,20 @@ spring:
     deserialization:
       fail-on-unknown-properties: false
   datasource:
-    url: jdbc:postgresql://${POSTGRESQL_HOST}:${POSTGRESQL_PORT}/${POSTGRESQL_DATABASE}
-    username: ${POSTGRESQL_USERNAME}
-    password: ${POSTGRESQL_PASSWORD}
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
   jpa:
     open-in-view: false
-    generate-ddl: true
+    generate-ddl: false
     show-sql: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     properties:
       hibernate:
         globally_quoted_identifiers: true
         format_sql: true
-  sql:
-    init:
-      mode: never
-      continue-on-error: false
-      data-locations: classpath:/data/db_init.sql
   servlet:
     multipart:
       enabled: true
@@ -49,23 +45,11 @@ spring:
           auth: false
           starttls:
             enable: false
-#  mail:
-#    properties:
-#      mail:
-#        mime:
-#          charset: UTF
-#        smtp:
-#          writetimeout: 10000
-#          connectiontimeout: 10000
-#          timeout: 10000
-#          auth: false
-#          starttls:
-#            enable: false
-#            required: true
+
     verify:
-      host: ${VERIFY_EMAIL_HOST}
+      host: ${EMAIL_VERIFY_HOST}
 server:
-  port: ${CONTAINER_PORT:8080}
+  port: ${APPLICATION_PORT:8080}
   error:
     path: /user/error
     whitelabel:
