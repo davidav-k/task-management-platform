@@ -46,5 +46,7 @@ public interface UserService {
     void changePassword(Long id, String oldPassword, String newPassword, String confirmNewPassword);
 
     void deleteUser(Long userId, Authentication authentication);
+
+    void lockedUser(String email);
 }
 

@@ -6,6 +6,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -43,6 +45,11 @@ public class ExceptionHandlerAdvice {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public Response handleDatabaseConstraintException(DataIntegrityViolationException ex, HttpServletRequest request) {
         return RequestUtils.getResponse(request, Map.of(), "User with this email already exists", HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public Response handleAccessDeniedException(AccessDeniedException ex, HttpServletRequest request) {
+        return RequestUtils.getResponse(request, Map.of(), "Access denied: " + ex.getMessage(), HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler(Exception.class)

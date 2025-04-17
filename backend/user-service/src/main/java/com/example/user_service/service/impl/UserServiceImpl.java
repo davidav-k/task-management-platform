@@ -202,6 +202,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void lockedUser(String email) {
+        UserEntity userEntity = getUserEntityByEmail(email);
+        userEntity.setAccountNonLocked(false);
+        userRepository.save(userEntity);
+    }
+
+
+
+
+    @Override
     public void updateUser(UserEntity userEntity, UserRequest userRequest) {
         if (userRepository.existsByEmail(userRequest.getEmail())){
             throw new ApiException("User with this email already exists");
@@ -232,5 +242,7 @@ public class UserServiceImpl implements UserService {
     public void deleteUser(Long userId, Authentication authentication) {
 
     }
+
+
 }
 

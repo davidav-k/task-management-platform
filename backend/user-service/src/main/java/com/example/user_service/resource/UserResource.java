@@ -3,11 +3,9 @@ package com.example.user_service.resource;
 import com.example.user_service.domain.Response;
 import com.example.user_service.domain.TokenData;
 import com.example.user_service.dto.LoginRequest;
-import com.example.user_service.dto.UserRequest;
 import com.example.user_service.dto.User;
-import com.example.user_service.entity.UserEntity;
+import com.example.user_service.dto.UserRequest;
 import com.example.user_service.enumeration.TokenType;
-import com.example.user_service.repository.UserRepository;
 import com.example.user_service.service.JwtService;
 import com.example.user_service.service.UserService;
 import com.example.user_service.utils.RequestUtils;
@@ -36,8 +34,6 @@ public class UserResource {
 
     private final UserService userService;
     private final JwtService jwtService;
-    private final UserRepository userRepository;
-
 
     private URI getUri() {
         return URI.create("");
@@ -82,9 +78,9 @@ public class UserResource {
                 HttpStatus.OK));
     }
 
-    //todo: security
-    @PostMapping("/{userId}/enable-mfa")
-    public ResponseEntity<Response> enableMfa(@PathVariable Long userId, @RequestParam String email, HttpServletRequest request) {
+    @PreAuthorize("hasAuthority('user:update')")
+    @PostMapping("/enable-mfa")
+    public ResponseEntity<Response> enableMfa(@RequestParam String email, HttpServletRequest request) {
         userService.enableMfa(email);
         return ResponseEntity.ok().body(RequestUtils.getResponse(
                 request,
@@ -113,9 +109,9 @@ public class UserResource {
         }
     }
 
-    @PreAuthorize("hasAuthority('user:unlock')")
-    @PostMapping("/{userId}/unlock")
-    public ResponseEntity<Response> unlockUser(@PathVariable Long userId, @RequestParam String email, HttpServletRequest request) {
+    @PreAuthorize("hasAuthority('user:update')")
+    @PostMapping("/unlock")
+    public ResponseEntity<Response> unlockUser(@RequestParam String email, HttpServletRequest request) {
         userService.unlockedUser(email);
         return ResponseEntity.ok().body(RequestUtils.getResponse(
                 request,
@@ -123,6 +119,19 @@ public class UserResource {
                 "User unlocked successfully.",
                 HttpStatus.OK));
     }
+
+    @PreAuthorize("hasAuthority('user:update')")
+    @PostMapping("/lock")
+    public ResponseEntity<Response> lockUser(@RequestParam String email, HttpServletRequest request) {
+        userService.lockedUser(email);
+        return ResponseEntity.ok().body(RequestUtils.getResponse(
+                request,
+                Map.of(),
+                "User unlocked successfully.",
+                HttpStatus.OK));
+    }
+
+
 
     @PostMapping("/refresh")
     public ResponseEntity<Response> refreshTokens(HttpServletRequest request, HttpServletResponse response) {
@@ -146,15 +155,15 @@ public class UserResource {
         User user = userService.getUserByUserId(tokenData.getUserId());
         return ResponseEntity.ok().body(RequestUtils.getResponse(request, Map.of("user", user), "User profile retrieved successfully.", HttpStatus.OK));
     }
-    //todo: security
-    @PutMapping("/{userId}/update")
+    @PreAuthorize("hasAuthority('user:update')")
+    @PutMapping("/{userId}")
     public ResponseEntity<Response> updateUser(@PathVariable Long userId, @RequestBody @Valid UserRequest userRequest, HttpServletRequest request) {
 
         return ResponseEntity.ok().body(RequestUtils.getResponse(request, emptyMap(), "User updated successfully.", HttpStatus.OK));
     }
 
-    //todo: security
-    @PatchMapping("/{userId}/password")
+    @PreAuthorize("hasAuthority('user:update')")
+    @PatchMapping("/password/{userId}")
     public ResponseEntity<Response> changePassword(@PathVariable Long userId, @RequestBody Map<String, String> passwordMap, HttpServletRequest request) {
         String oldPassword = passwordMap.get("oldPassword");
         String newPassword = passwordMap.get("newPassword");
@@ -164,8 +173,8 @@ public class UserResource {
         return ResponseEntity.ok().body(RequestUtils.getResponse(request, emptyMap(), "Changed password successfully.", HttpStatus.OK));
     }
 
-    //todo: security
-    @DeleteMapping("/{userId}/delete")
+    @PreAuthorize("hasAuthority('user:delete')")
+    @DeleteMapping("/{userId}")
     public ResponseEntity<Response> deleteUser(@PathVariable Long userId, HttpServletRequest request, Authentication authentication) {
 
         userService.deleteUser(userId, authentication);

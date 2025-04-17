@@ -8,27 +8,24 @@ This service handles user management, including:
 ## Technologies
 - Spring Boot
 - PostgreSQL for user data storage
-- Redis for storing access tokens
+- Google Guava for caching
 
 
-### For local dev launch (first launch)
-1. Delete all containers and volumes (docker)
-2. Run 'docker compose up -d' in the terminal from the docker folder.
-   Containers with the database and admin panel are built and launched
-3. Enable database initialization in application.yml:
-     sql.init.mode: always
-4. Change for local ip address following properties in application-dev.yml:
-   - POSTGRESQL_HOST: 
-   - EMAIL_HOST: 
-5. Launch the application.
-   Database is initialized using the db_init.sql file:
-   - users, roles, user_roles, credentials, confirmations tables are created
-   - SYSTEM user with id = 0 is added to the users table
-   - ADMIN and USER roles with id = 1 and 2 respectively are added to the roles table
-6. Stop the application
-7. Disable database initialization in application.yml:
-      sql.init.mode: never
+### For local launch 
+1. .env file
+   - Copy .env.example to .env
+   - Change the values of the variables in the .env file to your local environment
+     - Make sure to set your local ip address:
+       - POSTGRES_HOST
+       - EMAIL_HOST
 
+2. Delete all containers and volumes (docker)
+3. Run in the terminal from the root project folder
+```
+docker compose --env-file .env -f docker/compose.yml up -d
+```
+Containers with the database and admin panel are built and launched
+4. Launch the application.
 
 #### localhost:7001 - admin panel (pgAdmin) postgresql
 #### localhost:8025 - mailhog (email testing tool)
