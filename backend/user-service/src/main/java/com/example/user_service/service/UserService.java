@@ -41,7 +41,7 @@ public interface UserService {
 
     void unlockedUser(String email);
 
-    void updateUser(UserEntity userEntity, @Valid UserRequest userRequest);
+    void updateUser(Long userId, @Valid UserRequest userRequest);
 
     void changePassword(Long id, String oldPassword, String newPassword, String confirmNewPassword);
 

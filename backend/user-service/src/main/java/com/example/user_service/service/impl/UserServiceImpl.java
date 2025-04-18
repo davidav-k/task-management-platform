@@ -15,21 +15,16 @@ import com.example.user_service.repository.*;
 import com.example.user_service.service.MfaService;
 import com.example.user_service.service.UserService;
 import com.example.user_service.utils.UserUtils;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.helpers.MessageFormatter;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 
 
 import java.time.LocalDate;
@@ -80,7 +75,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public void verifyAccountKey(String key) {
         ConfirmationEntity confirmationEntity = getUserConfirmation(key);
-        UserEntity userEntity = getUserEntityByEmail(confirmationEntity.getUserEntity().getEmail());;
+        UserEntity userEntity = getUserEntityByEmail(confirmationEntity.getUserEntity().getEmail());
+        RequestContext.setUserId(userEntity.getId());
         userEntity.setEnabled(true);
         userRepository.save(userEntity);
         confirmationRepository.delete(confirmationEntity);
@@ -169,6 +165,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void updateLoginAttempt(String email, LoginType loginType, HttpServletRequest request) {
         UserEntity userEntity = getUserEntityByEmail(email);
+        RequestContext.setUserId(userEntity.getId());
         String ip = request.getRemoteAddr();
         String userAgent = request.getHeader("User-Agent");
 
@@ -202,21 +199,28 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void lockedUser(String email) {
-        UserEntity userEntity = getUserEntityByEmail(email);
-        userEntity.setAccountNonLocked(false);
+    public void updateUser(Long userId, UserRequest userRequest) {
+        UserEntity userEntity = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException("User not found"));
+        if (userRepository.existsByEmail(userRequest.getEmail())) {
+            if (!userEntity.getEmail().equals(userRequest.getEmail())) {
+                throw new ApiException("User with this email already exists");
+            }
+        }
+//        userRequest.setPassword(null);
+//        userRequest.setEmail(null);
+//        UserUtils.copyNonNullProperties(userRequest, userEntity);
+        userEntity.setFirstName(userRequest.getFirstName());
+        userEntity.setLastName(userRequest.getLastName());
+        userEntity.setPhone(userRequest.getPhone());
+        userEntity.setBio(userRequest.getBio());
         userRepository.save(userEntity);
     }
 
-
-
-
     @Override
-    public void updateUser(UserEntity userEntity, UserRequest userRequest) {
-        if (userRepository.existsByEmail(userRequest.getEmail())){
-            throw new ApiException("User with this email already exists");
-        }
-        UserUtils.copyNonNullProperties(userRequest, userEntity);
+    public void lockedUser(String email) {
+        UserEntity userEntity = getUserEntityByEmail(email);
+        userEntity.setAccountNonLocked(false);
         userRepository.save(userEntity);
     }
 

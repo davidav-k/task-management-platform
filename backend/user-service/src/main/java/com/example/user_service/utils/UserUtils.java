@@ -55,18 +55,18 @@ public class UserUtils {
         return credentialEntity.getUpdatedAt().plusDays(NINETY_DAYS).isAfter(LocalDateTime.now());
     }
 
-    @SneakyThrows
-    public static void copyNonNullProperties(Object source, Object destination) {
-        Class<?> clazz = source.getClass();
-        Field[] fields = clazz.getDeclaredFields();
-
-        for (Field field : fields){
-            field.setAccessible(true);
-            Object value = field.get(source);
-            if (value != null){
-                field.set(destination, value);
-            }
-        }
-    }
+//    @SneakyThrows
+//    public static void copyNonNullProperties(Object source, Object destination) {
+//        Class<?> clazz = source.getClass();
+//        Field[] fields = clazz.getDeclaredFields();
+//
+//        for (Field field : fields){
+//            field.setAccessible(true);
+//            Object value = field.get(source);
+//            if (value != null){
+//                field.set(destination, value);
+//            }
+//        }
+//    }
 
 }

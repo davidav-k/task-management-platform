@@ -1,7 +1,6 @@
 package com.example.user_service.security;
 
 import com.example.user_service.domain.ApiAuthentication;
-import com.example.user_service.domain.RequestContext;
 import com.example.user_service.domain.Response;
 import com.example.user_service.dto.LoginRequest;
 import com.example.user_service.dto.User;

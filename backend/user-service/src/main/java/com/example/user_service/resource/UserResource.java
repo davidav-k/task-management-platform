@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -78,7 +79,7 @@ public class UserResource {
                 HttpStatus.OK));
     }
 
-    @PreAuthorize("hasAuthority('user:update')")
+    @PreAuthorize("hasAuthority('user:update') or #userId == authentication.principal.id")
     @PostMapping("/enable-mfa")
     public ResponseEntity<Response> enableMfa(@RequestParam String email, HttpServletRequest request) {
         userService.enableMfa(email);
@@ -127,7 +128,7 @@ public class UserResource {
         return ResponseEntity.ok().body(RequestUtils.getResponse(
                 request,
                 Map.of(),
-                "User unlocked successfully.",
+                "User locked successfully.",
                 HttpStatus.OK));
     }
 
@@ -155,14 +156,18 @@ public class UserResource {
         User user = userService.getUserByUserId(tokenData.getUserId());
         return ResponseEntity.ok().body(RequestUtils.getResponse(request, Map.of("user", user), "User profile retrieved successfully.", HttpStatus.OK));
     }
-    @PreAuthorize("hasAuthority('user:update')")
+
+    @PreAuthorize("hasAuthority('user:update') or #userId == authentication.principal.id")
     @PutMapping("/{userId}")
     public ResponseEntity<Response> updateUser(@PathVariable Long userId, @RequestBody @Valid UserRequest userRequest, HttpServletRequest request) {
+
+        log.info("Updating user with ID: {}", userId);
+        userService.updateUser(userId,userRequest);
 
         return ResponseEntity.ok().body(RequestUtils.getResponse(request, emptyMap(), "User updated successfully.", HttpStatus.OK));
     }
 
-    @PreAuthorize("hasAuthority('user:update')")
+    @PreAuthorize("hasAuthority('user:update') or #userId == authentication.principal.id")
     @PatchMapping("/password/{userId}")
     public ResponseEntity<Response> changePassword(@PathVariable Long userId, @RequestBody Map<String, String> passwordMap, HttpServletRequest request) {
         String oldPassword = passwordMap.get("oldPassword");

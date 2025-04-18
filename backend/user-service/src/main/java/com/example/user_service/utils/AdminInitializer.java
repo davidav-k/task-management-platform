@@ -1,5 +1,6 @@
 package com.example.user_service.utils;
 
+import com.example.user_service.domain.RequestContext;
 import com.example.user_service.entity.CredentialEntity;
 import com.example.user_service.entity.RoleEntity;
 import com.example.user_service.entity.UserEntity;
@@ -23,6 +24,7 @@ public class AdminInitializer {
     private final CredentialRepository credentialRepository;
     private final BCryptPasswordEncoder passwordEncoder;
 
+
     @Value("${admin.password}")
     private String adminPassword;
 
@@ -33,6 +35,7 @@ public class AdminInitializer {
                     .orElseThrow(() -> new RuntimeException("ADMIN role not found"));
             UserEntity admin = UserUtils.createUserEntity("admin", "admin", "admin@mail.com", adminRole);
             admin.setEnabled(true);
+            RequestContext.setUserId(0L);
             userRepository.save(admin);
             CredentialEntity credentialEntity = new CredentialEntity(admin, passwordEncoder.encode(adminPassword));
             credentialRepository.save(credentialEntity);

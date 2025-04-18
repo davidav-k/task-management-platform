@@ -1,5 +1,6 @@
 package com.example.user_service.security;
 
+import com.example.user_service.domain.RequestContext;
 import com.example.user_service.dto.User;
 import com.example.user_service.enumeration.TokenType;
 import com.example.user_service.service.JwtService;
@@ -39,6 +40,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             log.info("JWT token found and valid");
             User user = jwtService.getTokenData(token.get(), TokenData::getUser);
 
+            RequestContext.setUserId(user.getId());
             Authentication authentication = new UsernamePasswordAuthenticationToken(
                     user, null, jwtService.getTokenData(token.get(), TokenData::getAuthorities)
             );
@@ -48,6 +50,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+        RequestContext.setUserId(null);
     }
 }
 
