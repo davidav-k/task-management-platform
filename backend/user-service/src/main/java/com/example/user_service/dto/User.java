@@ -1,8 +1,11 @@
 package com.example.user_service.dto;
 
-import lombok.Data;
+import lombok.*;
 
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class User {
 
     private Long id;

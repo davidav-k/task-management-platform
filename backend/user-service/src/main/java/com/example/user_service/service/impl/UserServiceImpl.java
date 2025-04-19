@@ -12,7 +12,6 @@ import com.example.user_service.enumeration.LoginType;
 import com.example.user_service.event.UserEvent;
 import com.example.user_service.exception.ApiException;
 import com.example.user_service.repository.*;
-import com.example.user_service.service.MfaService;
 import com.example.user_service.service.UserService;
 import com.example.user_service.utils.UserUtils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -46,7 +45,7 @@ public class UserServiceImpl implements UserService {
     private final ApplicationEventPublisher publisher;
     private final CacheStore<String, Integer> userCache;
     private final BCryptPasswordEncoder passwordEncoder;
-    private final MfaService mfaService;
+    private final MfaServiceImpl mfaService;
 
     @Override
     public void createUser(String firstName, String lastName, String email, String password) {
@@ -207,9 +206,6 @@ public class UserServiceImpl implements UserService {
                 throw new ApiException("User with this email already exists");
             }
         }
-//        userRequest.setPassword(null);
-//        userRequest.setEmail(null);
-//        UserUtils.copyNonNullProperties(userRequest, userEntity);
         userEntity.setFirstName(userRequest.getFirstName());
         userEntity.setLastName(userRequest.getLastName());
         userEntity.setPhone(userRequest.getPhone());

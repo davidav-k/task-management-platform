@@ -5,10 +5,7 @@ import com.example.user_service.dto.User;
 import com.example.user_service.entity.CredentialEntity;
 import com.example.user_service.entity.RoleEntity;
 import com.example.user_service.entity.UserEntity;
-import lombok.SneakyThrows;
 import org.springframework.beans.BeanUtils;
-
-import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -54,19 +51,5 @@ public class UserUtils {
     public static boolean isCredentialNonExpired(CredentialEntity credentialEntity) {
         return credentialEntity.getUpdatedAt().plusDays(NINETY_DAYS).isAfter(LocalDateTime.now());
     }
-
-//    @SneakyThrows
-//    public static void copyNonNullProperties(Object source, Object destination) {
-//        Class<?> clazz = source.getClass();
-//        Field[] fields = clazz.getDeclaredFields();
-//
-//        for (Field field : fields){
-//            field.setAccessible(true);
-//            Object value = field.get(source);
-//            if (value != null){
-//                field.set(destination, value);
-//            }
-//        }
-//    }
 
 }
