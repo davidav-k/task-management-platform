@@ -12,6 +12,7 @@ import com.example.user_service.enumeration.LoginType;
 import com.example.user_service.event.UserEvent;
 import com.example.user_service.exception.ApiException;
 import com.example.user_service.repository.*;
+import com.example.user_service.service.MfaService;
 import com.example.user_service.service.UserService;
 import com.example.user_service.utils.UserUtils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,9 +23,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -44,8 +44,8 @@ public class UserServiceImpl implements UserService {
     private final LoginHistoryRepository loginHistoryRepository;
     private final ApplicationEventPublisher publisher;
     private final CacheStore<String, Integer> userCache;
-    private final BCryptPasswordEncoder passwordEncoder;
-    private final MfaServiceImpl mfaService;
+    private final PasswordEncoder passwordEncoder;
+    private final MfaService mfaService;
 
     @Override
     public void createUser(String firstName, String lastName, String email, String password) {
@@ -55,7 +55,7 @@ public class UserServiceImpl implements UserService {
         UserEntity userEntity = userRepository.save(createNewUser(firstName, lastName, email));
         CredentialEntity credentialEntity = new CredentialEntity(userEntity, passwordEncoder.encode(password));
         credentialRepository.save(credentialEntity);
-        var confirmationEntity = new ConfirmationEntity(userEntity);
+        ConfirmationEntity confirmationEntity = new ConfirmationEntity(userEntity);
         confirmationRepository.save(confirmationEntity);
         publisher.publishEvent(new UserEvent(userEntity, EventType.REGISTRATION, Map.of("key", confirmationEntity.getKey())));
     }

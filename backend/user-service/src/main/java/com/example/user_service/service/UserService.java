@@ -9,8 +9,6 @@ import com.example.user_service.entity.UserEntity;
 import com.example.user_service.enumeration.LoginType;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotEmpty;
 import org.springframework.security.core.Authentication;
 
 public interface UserService {

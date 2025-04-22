@@ -1,0 +1,41 @@
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/testdb
+    username: testuser
+    password: testpass
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+  mail:
+    host: localhost
+    port: 1025
+    username: testuser
+    password: testpass
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+    verify:
+      host: localhost
+  jackson:
+    default-property-inclusion: non_null
+
+jwt:
+  expiration: 86400000
+  secret: test-secret-key-test-secret-key-test-secret-key-test-secrettest-secret-key-test-secret-key-test-secret-key-test-secrettest-secret-key-test-secret-key-test-secret-key-test-secrettest-secret-key-test-secret-key-test-secret-key-test-secret
+
+api:
+  endpoint:
+    base-url: http://localhost:8080/api/v1
+    user:
+      login: http://localhost:8080/api/v1/user/login
+
+admin:
+  password: admin
