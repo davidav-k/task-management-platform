@@ -28,7 +28,8 @@ import static java.util.Collections.emptyMap;
 
 @Slf4j
 @RestController
-@RequestMapping(path = "${api.endpoint.base-url}/user")
+//@RequestMapping(path = "${api.endpoint.base-url}/user")
+@RequestMapping(path = "/api/v1/user")
 @RequiredArgsConstructor
 public class UserResource {
 
@@ -137,12 +138,17 @@ public class UserResource {
     public ResponseEntity<Response> refreshTokens(HttpServletRequest request, HttpServletResponse response) {
         Optional<String> refreshToken = jwtService.extractToken(request, TokenType.REFRESH.getValue());
         if (refreshToken.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(RequestUtils.getResponse(request, emptyMap(), "Unauthorized access.", HttpStatus.UNAUTHORIZED));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(RequestUtils.getResponse(request, Map.of(), "Unauthorized access", HttpStatus.UNAUTHORIZED));
         }
+
         User tokenData = jwtService.getTokenData(refreshToken.get(), TokenData::getUser);
-        jwtService.addCookie(response, userService.getUserByUserId(tokenData.getUserId()), TokenType.ACCESS);
-        jwtService.addCookie(response, userService.getUserByUserId(tokenData.getUserId()), TokenType.REFRESH);
-        return ResponseEntity.ok().body(RequestUtils.getResponse(request, emptyMap(), "Tokens refreshed successfully.", HttpStatus.OK));
+        User user = userService.getUserByUserId(tokenData.getUserId());
+
+        jwtService.addCookie(response, user, TokenType.ACCESS);
+        jwtService.addCookie(response, user, TokenType.REFRESH);
+
+        return ResponseEntity.ok().body(RequestUtils.getResponse(request, Map.of(), "Tokens refreshed successfully.", HttpStatus.OK));
     }
 
     @GetMapping("/profile")

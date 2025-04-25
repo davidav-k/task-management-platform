@@ -1,12 +1,16 @@
 package com.example.user_service.resource;
 
+import com.example.user_service.UserServiceApplication;
+import com.example.user_service.config.TestContainersConfig;
+import com.example.user_service.config.TestEmailConfig;
+import com.example.user_service.config.TestSecurityConfig;
 import com.example.user_service.domain.ApiAuthentication;
 import com.example.user_service.domain.Response;
-import com.example.user_service.domain.TokenData;
 import com.example.user_service.dto.LoginRequest;
 import com.example.user_service.dto.User;
 import com.example.user_service.dto.UserRequest;
 import com.example.user_service.enumeration.TokenType;
+import com.example.user_service.exception.ExceptionHandlerAdvice;
 import com.example.user_service.service.JwtService;
 import com.example.user_service.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,12 +20,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -31,11 +36,16 @@ import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class UserResourceTest {
-
+@SpringBootTest
+@ActiveProfiles("test")
+@ContextConfiguration(initializers = TestContainersConfig.Initializer.class,
+        classes = {UserServiceApplication.class, TestSecurityConfig.class, TestEmailConfig.class})
+public class UserResourceTest {
     @Mock
     private UserService userService;
 
@@ -55,10 +65,12 @@ class UserResourceTest {
     private ObjectMapper objectMapper;
 
     @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(userResource).build();
+    public void setUp() {
         objectMapper = new ObjectMapper();
+        mockMvc = MockMvcBuilders
+                .standaloneSetup(userResource)
+                .setControllerAdvice(new ExceptionHandlerAdvice())
+                .build();
     }
 
     @Test

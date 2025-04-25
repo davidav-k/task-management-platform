@@ -107,7 +107,7 @@ VALUES (0, '123e4567-e89b-12d3-a456-426614174000', '2024-01-29 22:10:47.925942',
 
 INSERT INTO public.roles (id, name, authorities, created_at, created_by, reference_id, updated_at, updated_by)
 VALUES (1, 'ADMIN',
-        'user:create,user:read,user:update,user:unlock,document:create,document:read,document:update,document:delete',
+        'user:create,user:read,user:update,user:delete,document:create,document:read,document:update,document:delete',
         '2024-01-29 22:10:47.925942', 0, 'system', '2024-01-29 22:10:47.926642', 0);
 
 INSERT INTO public.roles (id, name, authorities, created_at, created_by, reference_id, updated_at, updated_by)

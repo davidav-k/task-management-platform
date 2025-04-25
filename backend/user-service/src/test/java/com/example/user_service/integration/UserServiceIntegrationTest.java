@@ -1,7 +1,9 @@
 package com.example.user_service.integration;
 
+import com.example.user_service.UserServiceApplication;
 import com.example.user_service.config.TestContainersConfig;
 import com.example.user_service.config.TestEmailConfig;
+import com.example.user_service.config.TestSecurityConfig;
 import com.example.user_service.security.SecurityConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 @ContextConfiguration(
     initializers = {TestContainersConfig.Initializer.class},
-    classes = {TestContainersConfig.class, TestEmailConfig.class}
+        classes = {UserServiceApplication.class, TestContainersConfig.class, TestEmailConfig.class, TestSecurityConfig.class}
 )
 public class UserServiceIntegrationTest {
 

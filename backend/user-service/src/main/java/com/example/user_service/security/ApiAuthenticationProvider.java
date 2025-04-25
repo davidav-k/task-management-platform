@@ -12,6 +12,7 @@ import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
@@ -22,7 +23,7 @@ import java.util.function.Function;
 public class ApiAuthenticationProvider implements AuthenticationProvider {
 
     private final UserService userService;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     private final Function<Authentication, ApiAuthentication> apiAuthenticationFunction = authentication -> (ApiAuthentication) authentication;
 
