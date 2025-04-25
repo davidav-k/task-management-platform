@@ -3,7 +3,8 @@ target/
 *.jar
 *.war
 *.class
-
+backend/user-service/docker/pgdata/
+backend/user-service/docker/pgadmindata/
 # Maven
 .mvn/
 mvnw
@@ -20,3 +21,5 @@ dist/
 .idea/
 *.iml
 .vscode/
+
+.env
