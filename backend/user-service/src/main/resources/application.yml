@@ -1,4 +1,14 @@
 spring:
+  application:
+    name: user-service
+    zipkin:
+      base-url: http://zipkin:9411
+    sleuth:
+      sampler:
+        probability: 1.0
+
+  config:
+    import: "optional: configserver:http://${CONFIG_SERVER_HOST:localhost}:${CONFIG_SERVER_PORT:8888}"
   profiles:
     active: ${ACTIVE_PROFILE:dev}
   jackson:
@@ -48,6 +58,7 @@ spring:
 
     verify:
       host: ${EMAIL_VERIFY_HOST}
+
 server:
   port: ${APPLICATION_PORT:8080}
   error:
@@ -67,3 +78,8 @@ api:
     base-url: /api/v1
     user:
       login: /api/v1/user/login
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka

@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: user-service
+
+  cloud:
+    config:
+      uri: http://config-server:8888
+      fail-fast: true
+
+  profiles:
+    active: dev
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+
+logging:
+  level:
+    org.springframework: INFO
+    org.hibernate.SQL: DEBUG
